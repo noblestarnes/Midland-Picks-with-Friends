@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Midland Picks Pool</title>
+<style>
+  :root{
+    --bg:#f4f5ef;
+    --surface:#ffffff;
+    --surface-2:#eceee3;
+    --line:#d9dcc9;
+    --ink:#1c1f18;
+    --ink-dim:#5b6152;
+    --ink-faint:#8b9080;
+    --gold:#b4790f;
+    --gold-ink:#7a5209;
+    --green:#1f5c40;
+    --green-soft:#e4efe6;
+    --red:#a3341f;
+    --red-soft:#f6e7e2;
+    --push:#8a8578;
+    --push-soft:#eeece4;
+    --live-dot:#c23b22;
+    --shadow: 0 1px 2px rgba(28,31,24,0.06), 0 6px 20px -8px rgba(28,31,24,0.18);
+    --radius: 14px;
+    --font-display: 'Oswald', 'Arial Narrow', sans-serif;
+    --font-body: 'Inter', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SFMono-Regular', monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#15140f;
+      --surface:#1e1c15;
+      --surface-2:#262319;
+      --line:#3a3627;
+      --ink:#f0efe4;
+      --ink-dim:#b7b6a3;
+      --ink-faint:#83816e;
+      --gold:#e0a636;
+      --gold-ink:#f3c766;
+      --green:#4d9c76;
+      --green-soft:#1c3227;
+      --red:#e07156;
+      --red-soft:#3a231d;
+      --push:#a6a290;
+      --push-soft:#2a2820;
+      --live-dot:#ff6b45;
+      --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 10px 28px -10px rgba(0,0,0,0.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#15140f;
+    --surface:#1e1c15;
+    --surface-2:#262319;
+    --line:#3a3627;
+    --ink:#f0efe4;
+    --ink-dim:#b7b6a3;
+    --ink-faint:#83816e;
+    --gold:#e0a636;
+    --gold-ink:#f3c766;
+    --green:#4d9c76;
+    --green-soft:#1c3227;
+    --red:#e07156;
+    --red-soft:#3a231d;
+    --push:#a6a290;
+    --push-soft:#2a2820;
+    --live-dot:#ff6b45;
+    --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 10px 28px -10px rgba(0,0,0,0.55);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--font-body); font-size:15px; line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{ font-family:var(--font-display); text-wrap:balance; letter-spacing:.01em; }
+  .mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+  a{ color:inherit; }
+  button{ font-family:inherit; }
+
+  /* ---------- header ---------- */
+  header.top{
+    position:sticky; top:0; z-index:20;
+    background:var(--bg); border-bottom:1px solid var(--line);
+    padding:14px 18px 0;
+  }
+  .brand{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; max-width:1180px; margin:0 auto; }
+  .brand .mark{
+    font-family:var(--font-display); font-weight:700; font-size:22px;
+    letter-spacing:.02em; text-transform:uppercase;
+  }
+  .brand .mark .accent{ color:var(--gold); }
+  .brand .tag{ color:var(--ink-faint); font-size:13px; }
+  .sync-badge{
+    margin-left:auto; display:flex; align-items:center; gap:6px;
+    font-size:12px; color:var(--ink-faint); white-space:nowrap;
+  }
+  .dot{ width:7px; height:7px; border-radius:50%; background:var(--live-dot); flex:none; }
+  .dot.pulse{ animation:pulse 1.8s infinite; }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+  @media (prefers-reduced-motion: reduce){ .dot.pulse{ animation:none; } }
+
+  nav.tabs{
+    max-width:1180px; margin:12px auto 0; display:flex; gap:4px;
+  }
+  nav.tabs button{
+    border:none; background:transparent; color:var(--ink-dim);
+    font-family:var(--font-display); font-size:14px; letter-spacing:.03em; text-transform:uppercase;
+    padding:9px 4px; margin-right:18px; cursor:pointer; border-bottom:2px solid transparent;
+  }
+  nav.tabs button.active{ color:var(--ink); border-bottom-color:var(--gold); }
+  nav.tabs button:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+
+  main{ max-width:1180px; margin:0 auto; padding:18px; }
+
+  /* ---------- layout ---------- */
+  .week-layout{ display:grid; grid-template-columns: 1fr 320px; gap:18px; align-items:start; }
+  @media (max-width:860px){ .week-layout{ grid-template-columns:1fr; } }
+
+  .panel{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow);
+  }
+  .panel-pad{ padding:16px 18px; }
+  .panel-head{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:14px 18px; border-bottom:1px solid var(--line);
+  }
+  .panel-head h2{ margin:0; font-size:16px; text-transform:uppercase; letter-spacing:.04em; }
+
+  /* week picker + wager key */
+  .week-select-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+  select, .btn, input[type=text], input[type=number]{
+    font-family:var(--font-body); font-size:14px; border-radius:9px;
+    border:1px solid var(--line); background:var(--surface); color:var(--ink);
+    padding:8px 10px;
+  }
+  select:focus-visible, .btn:focus-visible, input:focus-visible{ outline:2px solid var(--gold); outline-offset:1px; }
+  .btn{ cursor:pointer; font-weight:600; }
+  .btn:hover{ border-color:var(--gold); }
+  .btn.primary{ background:var(--gold); border-color:var(--gold); color:#1c1300; }
+  .btn.primary:hover{ filter:brightness(1.05); }
+  .btn.ghost{ background:transparent; }
+  .btn.small{ padding:5px 9px; font-size:12.5px; border-radius:7px; }
+  .btn.danger{ color:var(--red); }
+
+  .chip-row{ display:flex; flex-wrap:wrap; gap:7px; }
+  .chip{
+    border:1px solid var(--line); border-radius:999px; padding:6px 12px; font-size:13px;
+    background:var(--surface-2); cursor:pointer; color:var(--ink-dim); font-weight:600;
+  }
+  .chip.on{ background:var(--green-soft); border-color:var(--green); color:var(--green); }
+  .chip.add{ border-style:dashed; color:var(--ink-faint); }
+
+  .wagerkey{
+    display:flex; flex-wrap:wrap; gap:8px 18px; font-size:12.5px; color:var(--ink-dim);
+    padding:10px 18px; border-bottom:1px solid var(--line); background:var(--surface-2);
+    border-radius:var(--radius) var(--radius) 0 0;
+  }
+  .wagerkey b{ color:var(--ink); font-family:var(--font-mono); }
+
+  /* games list */
+  .games{ display:flex; flex-direction:column; gap:12px; padding:16px 18px; }
+  .game-card{ border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .game-top{ display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--surface-2); flex-wrap:wrap; }
+  .matchup{ font-family:var(--font-display); font-size:16px; letter-spacing:.01em; }
+  .matchup .fav{ text-decoration:underline; text-decoration-color:var(--gold); text-decoration-thickness:2px; }
+  .spread{ font-size:12.5px; color:var(--ink-dim); }
+  .badge{
+    font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; font-weight:700;
+    padding:3px 8px; border-radius:999px;
+  }
+  .badge.wager-Regular{ background:var(--surface); color:var(--ink-faint); border:1px solid var(--line); }
+  .badge.wager-Hammer, .badge.wager-GOW{ background:var(--red-soft); color:var(--red); }
+  .badge.wager-DoubleHammer, .badge.wager-GOWHammer{ background:var(--red-soft); color:var(--red); }
+  .badge.wager-GOWDoubleHammer{ background:var(--red-soft); color:var(--red); }
+  .badge.final{ background:var(--push-soft); color:var(--push); }
+
+  .wager-select{
+    font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; font-weight:700;
+    padding:3px 20px 3px 8px; border-radius:999px; cursor:pointer;
+    font-family:var(--font-body); appearance:auto;
+  }
+  .wager-select.wager-Regular{ background:var(--surface); color:var(--ink-faint); border:1px solid var(--line); }
+  .wager-select.wager-Hammer, .wager-select.wager-GOW{ background:var(--red-soft); color:var(--red); border:1px solid transparent; }
+  .wager-select.wager-DoubleHammer, .wager-select.wager-GOWHammer{ background:var(--red-soft); color:var(--red); border:1px solid transparent; }
+  .wager-select.wager-GOWDoubleHammer{ background:var(--red-soft); color:var(--red); border:1px solid transparent; }
+  .badge.live{ background:var(--red-soft); color:var(--live-dot); }
+  .score-row{ display:flex; align-items:center; gap:14px; padding:10px 14px; flex-wrap:wrap; }
+  .score-team{ display:flex; align-items:center; gap:8px; }
+  .score-team label{ font-size:12.5px; color:var(--ink-faint); width:70px; }
+  .score-team input{ width:64px; text-align:center; font-family:var(--font-mono); }
+  .final-toggle{ display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-dim); }
+  .winner-tag{ font-size:12.5px; font-weight:700; }
+  .winner-tag.win{ color:var(--green); }
+  .winner-tag.push{ color:var(--push); }
+  .game-notes{ padding:0 14px; font-size:12px; color:var(--ink-faint); }
+
+  .picks-grid{ display:flex; flex-wrap:wrap; gap:8px; padding:12px 14px 14px; }
+  .pick-unit{ display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .pick-name{ font-size:11px; color:var(--ink-faint); font-weight:600; max-width:70px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .pick-toggle{ display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  .pick-toggle button{
+    border:none; background:var(--surface); color:var(--ink-dim); font-size:11.5px; font-weight:700;
+    padding:6px 8px; cursor:pointer; min-width:44px;
+  }
+  .pick-toggle button.sel{ background:var(--gold); color:#1c1300; }
+  .pick-toggle button.correct{ background:var(--green); color:#fff; }
+  .pick-toggle button.wrong{ background:var(--red-soft); color:var(--red); text-decoration:line-through; }
+  .pick-amt{ font-size:10.5px; font-family:var(--font-mono); color:var(--ink-faint); }
+
+  .add-game-form{ display:grid; grid-template-columns:repeat(6,1fr); gap:8px; padding:14px 18px; border-top:1px solid var(--line); }
+  .add-game-form label{ font-size:11px; color:var(--ink-faint); display:block; margin-bottom:3px; }
+  .add-game-form .full{ grid-column:1/-1; }
+  @media (max-width:700px){ .add-game-form{ grid-template-columns:repeat(2,1fr); } }
+
+  /* standings */
+  .standings-list{ display:flex; flex-direction:column; }
+  .stand-row{
+    display:flex; align-items:center; gap:10px; padding:10px 18px; border-bottom:1px solid var(--line);
+  }
+  .stand-row:last-child{ border-bottom:none; }
+  .stand-rank{ font-family:var(--font-mono); color:var(--ink-faint); width:18px; }
+  .stand-name{ font-weight:700; flex:1; }
+  .stand-amt{ font-family:var(--font-mono); font-weight:700; }
+  .pos{ color:var(--green); }
+  .neg{ color:var(--red); }
+  .zero{ color:var(--ink-faint); }
+
+  .empty{ padding:26px 18px; text-align:center; color:var(--ink-faint); font-size:13.5px; }
+
+  /* season */
+  .season-table-wrap{ overflow-x:auto; }
+  table.season{ border-collapse:collapse; width:100%; font-size:13.5px; }
+  table.season th, table.season td{ padding:9px 12px; text-align:right; border-bottom:1px solid var(--line); white-space:nowrap; }
+  table.season th{ text-align:right; font-family:var(--font-display); font-weight:500; text-transform:uppercase; font-size:11.5px; letter-spacing:.03em; color:var(--ink-faint); position:sticky; top:0; background:var(--surface); }
+  table.season th:first-child, table.season td:first-child{ text-align:left; position:sticky; left:0; background:var(--surface); }
+  table.season td.name{ font-weight:700; }
+  table.season td.total{ font-family:var(--font-mono); font-weight:700; }
+  table.season tr:hover td{ background:var(--surface-2); }
+
+  .bars{ padding:16px 18px; display:flex; flex-direction:column; gap:10px; }
+  .bar-row{ display:grid; grid-template-columns:80px 1fr 70px; align-items:center; gap:10px; font-size:12.5px; }
+  .bar-track{ height:10px; background:var(--surface-2); border-radius:6px; overflow:hidden; position:relative; }
+  .bar-fill{ height:100%; border-radius:6px; }
+  .bar-fill.pos{ background:var(--green); }
+  .bar-fill.neg{ background:var(--red); }
+
+  .roster-editor{ display:flex; flex-wrap:wrap; gap:7px; padding:14px 18px; border-top:1px solid var(--line); }
+
+  footer{ max-width:1180px; margin:8px auto 30px; padding:0 18px; color:var(--ink-faint); font-size:12px; }
+
+  /* ---------- modal (replaces prompt/confirm/alert, which sandboxed pages can't use) ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(10,9,6,0.45); display:flex;
+    align-items:center; justify-content:center; padding:20px; z-index:100;
+  }
+  .modal-overlay[hidden]{ display:none; }
+  .modal-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); width:100%; max-width:360px; padding:18px;
+  }
+  .modal-card h3{ margin:0 0 10px; font-size:16px; }
+  .modal-card p{ margin:0 0 14px; font-size:13.5px; color:var(--ink-dim); }
+  .modal-card input{ width:100%; margin-bottom:14px; }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:8px; }
+
+  .toast{
+    position:fixed; left:50%; bottom:22px; transform:translateX(-50%);
+    background:var(--ink); color:var(--bg); padding:10px 16px; border-radius:9px;
+    font-size:13.5px; box-shadow:var(--shadow); z-index:110; max-width:90vw;
+  }
+  .toast[hidden]{ display:none; }
+
+  .lock-btn{ display:flex; align-items:center; gap:5px; font-size:12px; }
+  .lock-btn .ico{ font-size:13px; }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+</head>
+<body>
+
+<!--
+  ============================================================================
+  SETUP — do this once before publishing to GitHub Pages:
+
+  1. Create a free Firebase project (console.firebase.google.com), enable
+     Cloud Firestore, and register a Web App to get a config object.
+  2. Paste that config into FIREBASE_CONFIG below (search for "PASTE YOUR").
+  3. Set EDITOR_PIN_HASH below (see the comment there for how to generate it).
+  4. Open this page once in a browser, unlock edit mode with your PIN, open
+     the browser console, and run:  seedInitialData()
+     — this loads the real Week 1 + Week 2 data and the roster so far
+     (ALEX, NEEL, NOBLE, DANNY). Add the rest of your group with
+     "+ add person" afterward. Only needs to be run once, ever.
+
+  Full walkthrough: see the setup guide sent alongside this file.
+  ============================================================================
+-->
+
+<header class="top">
+  <div class="brand">
+    <div class="mark">Midland Picks <span class="accent">w/ Friends</span></div>
+    <div class="tag">against-the-spread pool &middot; hammer-style wagering</div>
+    <div class="sync-badge" id="syncBadge"><span class="dot" id="syncDot"></span><span id="syncText">connecting…</span></div>
+    <button class="btn small ghost lock-btn" id="lockBtn"><span class="ico" id="lockIco">🔒</span><span id="lockLabel">Unlock editing</span></button>
+  </div>
+  <nav class="tabs">
+    <button class="active" data-tab="week">This Week</button>
+    <button data-tab="season">Season</button>
+  </nav>
+</header>
+
+<main>
+  <div id="weekView"></div>
+  <div id="seasonView" style="display:none;"></div>
+</main>
+
+<footer>Picks and scores sync live to everyone with this link. Scores marked <b>LIVE</b> update automatically during games; anyone can correct a score by hand.</footer>
+
+<div class="modal-overlay" id="modalOverlay" hidden>
+  <div class="modal-card" id="modalCard"></div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  // ======================== FIREBASE CONFIG ========================
+  // PASTE YOUR config object here, from Firebase console ->
+  // Project settings -> General -> Your apps -> Web app -> SDK setup.
+  var FIREBASE_CONFIG = {
+    apiKey: "PASTE_YOUR_API_KEY",
+    authDomain: "PASTE_YOUR_PROJECT.firebaseapp.com",
+    projectId: "PASTE_YOUR_PROJECT",
+    storageBucket: "PASTE_YOUR_PROJECT.appspot.com",
+    messagingSenderId: "PASTE_YOUR_SENDER_ID",
+    appId: "PASTE_YOUR_APP_ID"
+  };
+
+  // ======================== EDIT-MODE PIN ==========================
+  // This is a lightweight deterrent (anyone who views this page's source
+  // can find this hash), not real security — appropriate for a friends'
+  // pool with no sensitive data, not for anything that needs real auth.
+  // To set your PIN: open any browser console and run
+  //   crypto.subtle.digest('SHA-256', new TextEncoder().encode('yourPIN'))
+  //     .then(b=>console.log(Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')))
+  // then paste the resulting hex string below. Default PIN below is "midland26".
+  var EDITOR_PIN_HASH = "c4ed5517293d5fd28157f2172ae556f51f0378ff0f56318263a716be554604e1"; // default PIN is "midland26" — change this before publishing!
+
+  var WAGER_KEY = {"Regular":50,"Hammer":100,"Double Hammer":200,"GOW":100,"GOW & Hammer":200,"GOW & Double Hammer":400};
+  var WAGER_BADGE_CLASS = {"Regular":"wager-Regular","Hammer":"wager-Hammer","Double Hammer":"wager-DoubleHammer","GOW":"wager-GOW","GOW & Hammer":"wager-GOWHammer","GOW & Double Hammer":"wager-GOWDoubleHammer"};
+
+  var state = {
+    roster: [],
+    weeks: [],            // [{id, data}], ordered
+    currentWeekId: null,
+    tab: 'week',
+    editingWeek: false,
+    editTimer: null,
+    editMode: false,       // unlocked with the shared PIN — gates all writes
+  };
+
+  var db = null;
+
+  // ---------------- PIN gate (edit mode) ----------------
+  function sha256Hex(text){
+    var enc = new TextEncoder().encode(text);
+    return crypto.subtle.digest('SHA-256', enc).then(function(buf){
+      return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+    });
+  }
+  function refreshLockUI(){
+    var ico = $('#lockIco'), label = $('#lockLabel');
+    if (!ico) return;
+    ico.textContent = state.editMode ? '🔓' : '🔒';
+    label.textContent = state.editMode ? 'Editing unlocked' : 'Unlock editing';
+  }
+  async function tryUnlock(){
+    if (state.editMode){
+      var ok = await showConfirm('Lock editing again for this browser?');
+      if (ok){ state.editMode = false; localStorage.removeItem('midlandEditUnlocked'); refreshLockUI(); render(true); }
+      return;
+    }
+    var pin = await showPrompt('Enter the group PIN to enable editing', '');
+    if (!pin) return;
+    var hash = await sha256Hex(pin);
+    if (hash === EDITOR_PIN_HASH){
+      state.editMode = true;
+      localStorage.setItem('midlandEditUnlocked', '1');
+      refreshLockUI();
+      render(true);
+      showToast('Editing unlocked for this browser.');
+    } else {
+      showToast('Wrong PIN.');
+    }
+  }
+  function initLock(){
+    if (localStorage.getItem('midlandEditUnlocked') === '1') state.editMode = true;
+    refreshLockUI();
+    $('#lockBtn').addEventListener('click', tryUnlock);
+  }
+  function requireEdit(){
+    if (!state.editMode){ showToast('Unlock editing (top right) with the group PIN first.'); return false; }
+    return true;
+  }
+
+  function $(sel, root){ return (root||document).querySelector(sel); }
+  function el(tag, cls, html){
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html !== undefined) e.innerHTML = html;
+    return e;
+  }
+  function fmt(n){
+    n = Math.round(n);
+    var sign = n < 0 ? '-' : (n > 0 ? '+' : '');
+    return sign + '$' + Math.abs(n);
+  }
+  function clsFor(n){ return n > 0.001 ? 'pos' : (n < -0.001 ? 'neg' : 'zero'); }
+  function uid(prefix){ return prefix + Math.random().toString(36).slice(2,9); }
+
+  // ---------------- modal helpers (this page is sandboxed, so window.prompt/confirm/alert are blocked) ----------------
+  var modalOverlay, modalCard, toastEl, toastTimer;
+  // Surface anything that goes wrong instead of failing silently — a
+  // button that "does nothing" is otherwise impossible to diagnose.
+  window.addEventListener('error', function(e){
+    console.error('uncaught error', e.error || e.message);
+    showToast('Something went wrong (' + (e && e.message ? e.message : 'unknown error') + ') — try again, and if it keeps happening let Noble know.');
+  });
+  window.addEventListener('unhandledrejection', function(e){
+    console.error('unhandled rejection', e.reason);
+    var msg = (e && e.reason && (e.reason.message || e.reason.code)) || 'unknown error';
+    showToast('Something went wrong (' + msg + ') — try again, and if it keeps happening let Noble know.');
+  });
+
+  function initModal(){
+    modalOverlay = document.getElementById('modalOverlay');
+    modalCard = document.getElementById('modalCard');
+    toastEl = document.getElementById('toast');
+    modalOverlay.addEventListener('click', function(e){
+      if (e.target === modalOverlay) closeModal();
+    });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape' && !modalOverlay.hidden) closeModal();
+    });
+  }
+  var modalResolve = null;
+  function closeModal(result){
+    modalOverlay.hidden = true;
+    modalCard.innerHTML = '';
+    var r = modalResolve; modalResolve = null;
+    if (r) r(result === undefined ? null : result);
+  }
+  function showToast(msg){
+    if (!toastEl){ console.warn('toast (not yet ready):', msg); return; }
+    if (toastTimer) clearTimeout(toastTimer);
+    toastEl.textContent = msg;
+    toastEl.hidden = false;
+    toastTimer = setTimeout(function(){ toastEl.hidden = true; }, 3200);
+  }
+  function showPrompt(title, defaultValue){
+    return new Promise(function(resolve){
+      modalResolve = resolve;
+      modalCard.innerHTML = '';
+      modalCard.appendChild(el('h3', null, escapeHtml(title)));
+      var input = el('input'); input.type = 'text'; input.value = defaultValue || '';
+      modalCard.appendChild(input);
+      var actions = el('div','modal-actions');
+      var cancel = el('button','btn ghost small','Cancel');
+      var ok = el('button','btn primary small','Save');
+      cancel.addEventListener('click', function(){ closeModal(null); });
+      ok.addEventListener('click', function(){ closeModal(input.value); });
+      input.addEventListener('keydown', function(e){
+        if (e.key === 'Enter') closeModal(input.value);
+        if (e.key === 'Escape') closeModal(null);
+      });
+      actions.appendChild(cancel); actions.appendChild(ok);
+      modalCard.appendChild(actions);
+      modalOverlay.hidden = false;
+      setTimeout(function(){ input.focus(); input.select(); }, 30);
+    });
+  }
+  function showConfirm(message){
+    return new Promise(function(resolve){
+      modalResolve = resolve;
+      modalCard.innerHTML = '';
+      modalCard.appendChild(el('p', null, escapeHtml(message)));
+      var actions = el('div','modal-actions');
+      var cancel = el('button','btn ghost small','Cancel');
+      var ok = el('button','btn primary small','Confirm');
+      cancel.addEventListener('click', function(){ closeModal(false); });
+      ok.addEventListener('click', function(){ closeModal(true); });
+      actions.appendChild(cancel); actions.appendChild(ok);
+      modalCard.appendChild(actions);
+      modalOverlay.hidden = false;
+      setTimeout(function(){ ok.focus(); }, 30);
+    });
+  }
+
+  // ---------------- payout math (mirrors the workbook's Payout Calc) ----------------
+  function netScore(score, isFavorite, spread){ return isFavorite ? (score + spread) : score; }
+
+  function computeGame(g, participants, picks){
+    var out = { id:g.id, status:'pending', winner:null, push:false, perPerson:{} };
+    if (g.awayScore === null || g.awayScore === undefined || g.homeScore === null || g.homeScore === undefined || g.awayScore === '' || g.homeScore === '') {
+      return out;
+    }
+    var aScore = Number(g.awayScore), hScore = Number(g.homeScore);
+    var jnet = netScore(aScore, g.favorite === g.away, g.spread);
+    var mnet = netScore(hScore, g.favorite === g.home, g.spread);
+    out.status = g.final ? 'final' : 'live';
+    if (jnet === mnet){ out.push = true; return out; }
+    var winner = jnet > mnet ? g.away : g.home;
+    out.winner = winner;
+    var P = WAGER_KEY[g.wager] || WAGER_KEY.Regular;
+
+    var voters = [];
+    participants.forEach(function(p){
+      var pk = picks[p] && picks[p][g.id];
+      if (pk === g.away || pk === g.home) voters.push({person:p, pick:pk});
+    });
+    var Q = voters.length;
+    if (Q === 0) return out;
+    var R = voters.filter(function(v){ return v.pick === g.away; }).length;
+    var S = Q - R;
+    var T = Math.max(R,S), U = Math.min(R,S);
+    var V = T * P;
+    var W = T ? V / T : 0;
+    var X = U ? V / U : 0;
+    var Ywin = winner === g.away ? R : S;
+    var majority = Ywin >= Q/2;
+    voters.forEach(function(v){
+      var amt;
+      if (v.pick === winner){ amt = majority ? W : X; }
+      else { amt = -(majority ? X : W); }
+      out.perPerson[v.person] = amt;
+    });
+    return out;
+  }
+
+  function computeWeek(weekData){
+    var participants = weekData.participants || [];
+    var picks = weekData.picks || {};
+    var totals = {}; participants.forEach(function(p){ totals[p]=0; });
+    var gameResults = {};
+    (weekData.games||[]).forEach(function(g){
+      var r = computeGame(g, participants, picks);
+      gameResults[g.id] = r;
+      Object.keys(r.perPerson).forEach(function(p){
+        totals[p] = (totals[p]||0) + r.perPerson[p];
+      });
+    });
+    return { totals: totals, gameResults: gameResults };
+  }
+
+  // ---------------- db wiring (Firebase Firestore) ----------------
+  async function init(){
+    initModal();
+    initLock();
+    try{
+      if (!FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey.indexOf('PASTE_YOUR') === 0){
+        throw new Error('Firebase config not set yet');
+      }
+      var app = firebase.initializeApp(FIREBASE_CONFIG);
+      db = firebase.firestore();
+    }catch(e){ console.error('firebase init failed', e); db = null; }
+    if (!db){
+      $('#syncText').textContent = 'set FIREBASE_CONFIG in the page source to enable live sync';
+      $('#syncDot').style.background = 'var(--push)';
+      render();
+      return;
+    }
+
+    db.doc('meta/roster').onSnapshot(function(snap){
+      var data = snap.data();
+      // clone: snapshot data (and its arrays) are frozen, but we push into
+      // state.roster locally ("add person") between remote updates.
+      state.roster = ((data && data.people) || []).slice();
+      render();
+    }, function(){});
+
+    db.collection('weeks').orderBy('order','asc').onSnapshot(function(qs){
+      var weeks = qs.docs.map(function(d){ return { id:d.id, data:d.data() }; });
+      state.weeks = weeks;
+      if (!state.currentWeekId && weeks.length){
+        state.currentWeekId = weeks[weeks.length-1].id;
+      }
+      render();
+    }, function(){});
+
+    db.doc('meta/sync').onSnapshot(function(snap){
+      var data = snap.data();
+      if (data && data.lastSyncedAt){
+        var when = new Date(data.lastSyncedAt);
+        var mins = Math.round((Date.now()-when.getTime())/60000);
+        var label = mins < 1 ? 'just now' : (mins < 60 ? mins+'m ago' : Math.round(mins/60)+'h ago');
+        $('#syncText').textContent = 'scores synced ' + label;
+        $('#syncDot').classList.add('pulse');
+      } else {
+        $('#syncText').textContent = 'no auto-sync yet — enter scores below';
+      }
+    }, function(){});
+  }
+
+  function currentWeek(){
+    return state.weeks.find(function(w){ return w.id === state.currentWeekId; });
+  }
+
+  // ---------------- writes ----------------
+  // One debounce timer PER WEEK (not shared) so editing two weeks in quick
+  // succession can never cancel a pending write for the other one.
+  var writeTimers = {};
+  function scheduleWrite(weekId, data){
+    if (writeTimers[weekId]) clearTimeout(writeTimers[weekId]);
+    writeTimers[weekId] = setTimeout(function(){
+      if (!db) return;
+      db.collection('weeks').doc(weekId).set(data).catch(function(e){
+        console.error('week write failed', weekId, e);
+        showToast('Couldn’t save that change (' + (e && e.code ? e.code : 'connection issue') + ') — try again.');
+      });
+    }, 350);
+  }
+  function writeRosterNow(){
+    if (!db) return;
+    db.doc('meta/roster').set({ people: state.roster }).catch(function(e){
+      console.error('roster write failed', e);
+      showToast('Couldn’t save the roster change — try again.');
+    });
+  }
+
+  function mutateWeek(weekId, fn){
+    var w = state.weeks.find(function(x){ return x.id === weekId; });
+    if (!w) return;
+    // db snapshots are frozen (and shared across renders), so clone before
+    // mutating — writing straight into w.data throws
+    // "Cannot assign to read only property".
+    var next = JSON.parse(JSON.stringify(w.data || {}));
+    fn(next);
+    w.data = next;
+    render(true);
+    scheduleWrite(weekId, next);
+  }
+
+  // ---------------- render ----------------
+  // `force` bypasses the "don't yank focus while typing" guard below. Pass
+  // force=true for anything triggered by a local, deliberate action (a
+  // click, a submit, a toggle) — those should always show up immediately.
+  // Leave it false (the default) only for re-renders triggered by a REMOTE
+  // db snapshot arriving while this viewer might be mid-edit.
+  function render(force){
+    if (state.tab === 'week') renderWeekTab(force); else renderSeasonTab();
+  }
+
+  function setEditing(on){
+    state.editingWeek = on;
+  }
+
+  function renderWeekTab(force){
+    $('#weekView').style.display = '';
+    $('#seasonView').style.display = 'none';
+    if (state.editingWeek && !force) return; // don't yank focus while typing
+
+    var root = $('#weekView');
+    root.innerHTML = '';
+
+    // week selector row
+    var selRow = el('div','week-select-row');
+    var select = el('select');
+    state.weeks.forEach(function(w){
+      var o = el('option'); o.value = w.id; o.textContent = w.data.label || w.id;
+      if (w.id === state.currentWeekId) o.selected = true;
+      select.appendChild(o);
+    });
+    select.addEventListener('change', function(){ state.currentWeekId = select.value; render(true); });
+    selRow.appendChild(select);
+
+    var addWeekBtn = el('button','btn small','+ New Week');
+    addWeekBtn.addEventListener('click', addWeek);
+    selRow.appendChild(addWeekBtn);
+
+    if (!state.weeks.length){
+      root.appendChild(selRow);
+      root.appendChild(el('div','panel panel-pad empty','No weeks yet — click “New Week” to set up your first slate.'));
+      return;
+    }
+
+    var week = currentWeek();
+    var comp = computeWeek(week.data);
+
+    var layout = el('div','week-layout');
+
+    // ---- left: games panel ----
+    var left = el('div','panel');
+    var head = el('div','panel-head');
+    head.appendChild(el('h2', null, escapeHtml(week.data.label || 'Week')));
+    var renameBtn = el('button','btn ghost small','rename');
+    renameBtn.addEventListener('click', async function(){
+      if (!requireEdit()) return;
+      var next = await showPrompt('Week label', week.data.label || '');
+      if (next){ mutateWeek(week.id, function(d){ d.label = next; }); }
+    });
+    head.appendChild(renameBtn);
+    left.appendChild(head);
+
+    // wager key
+    var wk = el('div','wagerkey');
+    Object.keys(WAGER_KEY).forEach(function(k){
+      wk.appendChild(el('span', null, k + ' <b>$' + WAGER_KEY[k] + '</b>'));
+    });
+    left.appendChild(wk);
+
+    // participants
+    var partWrap = el('div','panel-pad');
+    partWrap.style.paddingBottom = '4px';
+    partWrap.appendChild(el('div', null, '<span style="font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.04em;">Who&#39;s in this week</span>'));
+    var chipRow = el('div','chip-row');
+    chipRow.style.marginTop = '8px';
+    state.roster.forEach(function(person){
+      var on = (week.data.participants||[]).indexOf(person) !== -1;
+      var chip = el('button','chip'+(on?' on':''), escapeHtml(person));
+      chip.addEventListener('click', function(){
+        if (!requireEdit()) return;
+        mutateWeek(week.id, function(d){
+          d.participants = d.participants || [];
+          var idx = d.participants.indexOf(person);
+          if (idx === -1) d.participants.push(person); else d.participants.splice(idx,1);
+        });
+      });
+      chipRow.appendChild(chip);
+    });
+    var addPerson = el('button','chip add','+ add person');
+    addPerson.addEventListener('click', async function(){
+      if (!requireEdit()) return;
+      var name = await showPrompt('Add a name to the pool roster', '');
+      if (name){
+        name = name.trim().toUpperCase();
+        if (name && state.roster.indexOf(name) === -1){
+          state.roster.push(name);
+          writeRosterNow();
+          render(true);
+        }
+      }
+    });
+    chipRow.appendChild(addPerson);
+    partWrap.appendChild(chipRow);
+    left.appendChild(partWrap);
+
+    // games
+    var gamesWrap = el('div','games');
+    var participants = week.data.participants || [];
+    (week.data.games||[]).forEach(function(g){
+      gamesWrap.appendChild(renderGameCard(week, g, participants, comp));
+    });
+    if (!(week.data.games||[]).length){
+      gamesWrap.appendChild(el('div','empty','No games yet — add this week&#39;s slate below.'));
+    }
+    left.appendChild(gamesWrap);
+
+    left.appendChild(renderAddGameForm(week));
+
+    layout.appendChild(left);
+
+    // ---- right: standings ----
+    var right = el('div','panel');
+    var rHead = el('div','panel-head');
+    rHead.appendChild(el('h2', null, 'Standings'));
+    right.appendChild(rHead);
+    var list = el('div','standings-list');
+    var rows = participants.map(function(p){ return {name:p, amt: comp.totals[p]||0}; });
+    rows.sort(function(a,b){ return b.amt - a.amt; });
+    if (!rows.length){
+      list.appendChild(el('div','empty','Add participants to see standings.'));
+    }
+    rows.forEach(function(r, i){
+      var row = el('div','stand-row');
+      row.appendChild(el('div','stand-rank', String(i+1)));
+      row.appendChild(el('div','stand-name', escapeHtml(r.name)));
+      row.appendChild(el('div','stand-amt mono '+clsFor(r.amt), fmt(r.amt)));
+      list.appendChild(row);
+    });
+    right.appendChild(list);
+    layout.appendChild(right);
+
+    root.appendChild(selRow);
+    root.appendChild(layout);
+
+    // capture focus/blur so remote updates don't yank the UI mid-type
+    root.addEventListener('focusin', function(){ setEditing(true); }, true);
+    root.addEventListener('focusout', function(){
+      setTimeout(function(){
+        if (!root.contains(document.activeElement)) { setEditing(false); }
+      }, 60);
+    }, true);
+  }
+
+  function renderGameCard(week, g, participants, comp){
+    var result = comp.gameResults[g.id] || {};
+    var card = el('div','game-card');
+
+    var top = el('div','game-top');
+    var matchup = el('div','matchup');
+    matchup.innerHTML = (g.away===g.favorite?'<span class="fav">'+escapeHtml(g.away)+'</span>':escapeHtml(g.away)) +
+      ' <span style="color:var(--ink-faint);font-weight:400;">at</span> ' +
+      (g.home===g.favorite?'<span class="fav">'+escapeHtml(g.home)+'</span>':escapeHtml(g.home));
+    top.appendChild(matchup);
+    top.appendChild(el('div','spread mono', (g.favorite||'') + ' ' + (g.spread>0?'+':'') + g.spread));
+    var wagerSelect = el('select','wager-select '+(WAGER_BADGE_CLASS[g.wager]||'wager-Regular'));
+    wagerSelect.title = 'Change wager type';
+    Object.keys(WAGER_KEY).forEach(function(k){
+      var o = el('option', null, k + ' ($' + WAGER_KEY[k] + ')');
+      o.value = k;
+      if (k === g.wager) o.selected = true;
+      wagerSelect.appendChild(o);
+    });
+    wagerSelect.addEventListener('change', function(){
+      if (!requireEdit()) { wagerSelect.value = g.wager; return; }
+      var newWager = wagerSelect.value;
+      mutateWeek(week.id, function(d){
+        var game = d.games.find(function(x){ return x.id===g.id; });
+        if (game) game.wager = newWager;
+      });
+    });
+    top.appendChild(wagerSelect);
+    if (g.hammerBy) top.appendChild(el('span','badge wager-Hammer', 'hammer: '+escapeHtml(g.hammerBy)));
+    if (result.status === 'final') top.appendChild(el('span','badge final','FINAL'));
+    else if (result.status === 'live') top.appendChild(el('span','badge live','LIVE'));
+    var spacer = el('span'); spacer.style.marginLeft='auto';
+    var delBtn = el('button','btn ghost small danger','remove');
+    delBtn.addEventListener('click', async function(){
+      if (!requireEdit()) return;
+      var ok = await showConfirm('Remove this game? This can’t be undone.');
+      if (ok){
+        mutateWeek(week.id, function(d){ d.games = d.games.filter(function(x){ return x.id !== g.id; }); });
+      }
+    });
+    top.appendChild(spacer);
+    top.appendChild(delBtn);
+    card.appendChild(top);
+
+    if (g.notes) card.appendChild(el('div','game-notes', escapeHtml(g.notes)));
+
+    var scoreRow = el('div','score-row');
+    [['away',g.away],['home',g.home]].forEach(function(pair){
+      var side = pair[0], name = pair[1];
+      var unit = el('div','score-team');
+      unit.appendChild(el('label', null, escapeHtml(name)));
+      var input = el('input');
+      input.type='number'; input.inputMode='numeric';
+      input.value = (g[side+'Score']===null||g[side+'Score']===undefined) ? '' : g[side+'Score'];
+      input.addEventListener('change', function(){
+        if (!requireEdit()) { input.value = (g[side+'Score']===null||g[side+'Score']===undefined) ? '' : g[side+'Score']; return; }
+        var v = input.value === '' ? null : Number(input.value);
+        mutateWeek(week.id, function(d){
+          var game = d.games.find(function(x){ return x.id===g.id; });
+          if (game) game[side+'Score'] = v;
+        });
+      });
+      unit.appendChild(input);
+      scoreRow.appendChild(unit);
+    });
+    var finalLabel = el('label','final-toggle');
+    var finalChk = el('input'); finalChk.type='checkbox'; finalChk.checked = !!g.final;
+    finalChk.addEventListener('change', function(){
+      if (!requireEdit()) { finalChk.checked = !!g.final; return; }
+      mutateWeek(week.id, function(d){
+        var game = d.games.find(function(x){ return x.id===g.id; });
+        if (game) game.final = finalChk.checked;
+      });
+    });
+    finalLabel.appendChild(finalChk);
+    finalLabel.appendChild(document.createTextNode('final'));
+    scoreRow.appendChild(finalLabel);
+    if (result.winner) scoreRow.appendChild(el('span','winner-tag win', escapeHtml(result.winner)+' covers'));
+    else if (result.push) scoreRow.appendChild(el('span','winner-tag push','push — no money'));
+    card.appendChild(scoreRow);
+
+    var picksGrid = el('div','picks-grid');
+    participants.forEach(function(person){
+      var pk = (week.data.picks[person]||{})[g.id];
+      var unit = el('div','pick-unit');
+      unit.appendChild(el('div','pick-name', escapeHtml(person)));
+      var toggle = el('div','pick-toggle');
+      [g.away, g.home].forEach(function(team){
+        var b = el('button', null, escapeHtml(team));
+        var isSel = pk === team;
+        var cls = '';
+        if (isSel){
+          cls = 'sel';
+          if (result.winner) cls = (result.winner===team) ? 'correct' : 'wrong';
+        }
+        b.className = cls;
+        b.addEventListener('click', function(){
+          if (!requireEdit()) return;
+          mutateWeek(week.id, function(d){
+            d.picks = d.picks || {};
+            d.picks[person] = d.picks[person] || {};
+            d.picks[person][g.id] = (d.picks[person][g.id] === team) ? null : team;
+          });
+        });
+        toggle.appendChild(b);
+      });
+      unit.appendChild(toggle);
+      var amt = result.perPerson && (person in result.perPerson) ? result.perPerson[person] : null;
+      if (amt !== null) unit.appendChild(el('div','pick-amt '+clsFor(amt), fmt(amt)));
+      picksGrid.appendChild(unit);
+    });
+    card.appendChild(picksGrid);
+
+    return card;
+  }
+
+  function renderAddGameForm(week){
+    var form = el('div','add-game-form');
+    function field(labelText, inputEl, full){
+      var wrap = el('div', full ? 'full' : null);
+      wrap.appendChild(el('label', null, labelText));
+      wrap.appendChild(inputEl);
+      return wrap;
+    }
+    var away = el('input'); away.type='text'; away.placeholder='e.g. Texas Tech';
+    var home = el('input'); home.type='text'; home.placeholder='e.g. Baylor';
+    var spread = el('input'); spread.type='number'; spread.step='0.5'; spread.placeholder='-7.5';
+    var favSel = el('select');
+    ['Away favored','Home favored'].forEach(function(t,i){ var o=el('option',null,t); o.value=i; favSel.appendChild(o); });
+    var wagerSel = el('select');
+    Object.keys(WAGER_KEY).forEach(function(k){ var o=el('option',null,k+' ($'+WAGER_KEY[k]+')'); o.value=k; wagerSel.appendChild(o); });
+    var hammerBy = el('input'); hammerBy.type='text'; hammerBy.placeholder='who hammered? (optional)';
+    var notes = el('input'); notes.type='text'; notes.placeholder='kickoff / notes (optional)';
+
+    form.appendChild(field('Away team', away));
+    form.appendChild(field('Home team', home));
+    form.appendChild(field('Spread (favorite line)', spread));
+    form.appendChild(field('Favorite', favSel));
+    form.appendChild(field('Wager', wagerSel));
+    form.appendChild(field('Hammer called by', hammerBy));
+    form.appendChild(field('Notes', notes, true));
+
+    var addBtn = el('button','btn primary full','Add game to this week');
+    addBtn.style.gridColumn = '1/-1';
+    addBtn.addEventListener('click', function(){
+      if (!requireEdit()) return;
+      try{
+        var sp = parseFloat(spread.value);
+        if (!away.value.trim() || !home.value.trim() || spread.value==='' || isNaN(sp)){
+          showToast('Enter both teams and a spread (e.g. -7.5).'); return;
+        }
+        var a = away.value.trim(), h = home.value.trim();
+        var favorite = favSel.value === '0' ? a : h;
+        var g = {
+          id: uid('g'), away:a, home:h, favorite:favorite, spread: sp,
+          wager: wagerSel.value, hammerBy: hammerBy.value.trim() || null,
+          notes: notes.value.trim() || null,
+          awayScore: null, homeScore: null, final: false, espnId: null
+        };
+        var wk = currentWeek() || week;
+        if (!wk){ showToast('No week is selected — pick or create a week first.'); return; }
+        mutateWeek(wk.id, function(d){ d.games = d.games || []; d.games.push(g); });
+        away.value=''; home.value=''; spread.value=''; hammerBy.value=''; notes.value='';
+        showToast('Added ' + a + ' at ' + h + '.');
+      }catch(err){
+        console.error('add game failed', err);
+        showToast('Could not add that game (' + (err && err.message ? err.message : 'unknown error') + ').');
+      }
+    });
+    form.appendChild(addBtn);
+    return form;
+  }
+
+  async function addWeek(){
+    if (!requireEdit()) return;
+    if (!db){ showToast('Live sync is unavailable in this view.'); return; }
+    var n = state.weeks.length + 1;
+    var label = await showPrompt('Label for the new week', 'Week ' + n);
+    if (!label) return;
+    var lastParticipants = state.weeks.length ? (state.weeks[state.weeks.length-1].data.participants||[]) : [];
+    var id = 'week' + n + '-' + uid('');
+    var data = { label: label, order: n, participants: lastParticipants.slice(), games: [], picks: {}, createdAt: new Date().toISOString() };
+    try{
+      await db.collection('weeks').doc(id).set(data);
+      state.currentWeekId = id;
+      render(true);
+    }catch(e){
+      showToast('Could not create the week — try again.');
+    }
+  }
+
+  // ---------------- season tab ----------------
+  function renderSeasonTab(){
+    $('#weekView').style.display = 'none';
+    $('#seasonView').style.display = '';
+    var root = $('#seasonView');
+    root.innerHTML = '';
+
+    if (!state.weeks.length){
+      root.appendChild(el('div','panel panel-pad empty','No weeks recorded yet.'));
+      return;
+    }
+
+    var perPerson = {}; // name -> {weekLabel: amt}
+    var weekLabels = state.weeks.map(function(w){ return w.data.label || w.id; });
+    state.weeks.forEach(function(w){
+      var comp = computeWeek(w.data);
+      (w.data.participants||[]).forEach(function(p){
+        perPerson[p] = perPerson[p] || {};
+        perPerson[p][w.data.label || w.id] = comp.totals[p] || 0;
+      });
+    });
+
+    var names = Object.keys(perPerson);
+    var totals = names.map(function(name){
+      var sum = 0; weekLabels.forEach(function(wl){ sum += perPerson[name][wl] || 0; });
+      return { name:name, sum:sum };
+    });
+    totals.sort(function(a,b){ return b.sum - a.sum; });
+
+    var tablePanel = el('div','panel');
+    var head = el('div','panel-head'); head.appendChild(el('h2',null,'Season Standings'));
+    tablePanel.appendChild(head);
+    var wrap = el('div','season-table-wrap panel-pad');
+    var table = el('table','season');
+    var thead = el('thead');
+    var htr = el('tr');
+    htr.appendChild(el('th', null, 'Player'));
+    weekLabels.forEach(function(wl){ htr.appendChild(el('th', null, escapeHtml(wl))); });
+    htr.appendChild(el('th', null, 'Season'));
+    thead.appendChild(htr);
+    table.appendChild(thead);
+    var tbody = el('tbody');
+    totals.forEach(function(row){
+      var tr = el('tr');
+      tr.appendChild(el('td','name', escapeHtml(row.name)));
+      weekLabels.forEach(function(wl){
+        var v = perPerson[row.name][wl];
+        var td = el('td','mono');
+        td.textContent = (v===undefined) ? '—' : fmt(v);
+        if (v!==undefined) td.classList.add(clsFor(v));
+        tr.appendChild(td);
+      });
+      var totalTd = el('td','total mono '+clsFor(row.sum)); totalTd.textContent = fmt(row.sum);
+      tr.appendChild(totalTd);
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    wrap.appendChild(table);
+    tablePanel.appendChild(wrap);
+    root.appendChild(tablePanel);
+
+    // bar chart
+    var barsPanel = el('div','panel'); barsPanel.style.marginTop = '18px';
+    var bHead = el('div','panel-head'); bHead.appendChild(el('h2',null,'Season Totals'));
+    barsPanel.appendChild(bHead);
+    var bars = el('div','bars');
+    var maxAbs = Math.max(1, Math.max.apply(null, totals.map(function(t){ return Math.abs(t.sum); })));
+    totals.forEach(function(t){
+      var row = el('div','bar-row');
+      row.appendChild(el('div', null, escapeHtml(t.name)));
+      var track = el('div','bar-track');
+      var fill = el('div','bar-fill '+(t.sum>=0?'pos':'neg'));
+      fill.style.width = Math.max(2, Math.round(Math.abs(t.sum)/maxAbs*100)) + '%';
+      track.appendChild(fill);
+      row.appendChild(track);
+      row.appendChild(el('div','mono '+clsFor(t.sum), fmt(t.sum)));
+      bars.appendChild(row);
+    });
+    barsPanel.appendChild(bars);
+    root.appendChild(barsPanel);
+  }
+
+  function escapeHtml(s){
+    return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  // ---------------- one-time seed (run once from the browser console) ----------------
+  // Real, validated Week 1 + Week 2 data carried over from the original tool,
+  // plus the four names already in the roster. Add the rest of your group
+  // afterward with "+ add person".
+  window.seedInitialData = async function(){
+    if (!db){ console.warn('Firebase is not configured yet — set FIREBASE_CONFIG first.'); return; }
+    if (!state.editMode){ console.warn('Unlock editing first (top-right lock icon), then run seedInitialData() again.'); return; }
+    var roster = ["ALEX","NEEL","NOBLE","DANNY"];
+    var weeksData = [
+      {"id":"week1","createdAt":"2026-09-03T00:00:00.000Z","label":"Week 1","order":1,
+       "participants":["ALEX","NEEL","NOBLE","DANNY"],
+       "games":[{"away":"MIA","awayScore":45,"espnId":null,"favorite":"MIA","final":true,"hammerBy":"NEEL","home":"STAN","homeScore":6,"id":"g1","notes":"8pm - FRI","spread":-24.5,"wager":"Hammer"},{"away":"TXST","awayScore":7,"espnId":null,"favorite":"TEX","final":true,"hammerBy":null,"home":"TEX","homeScore":59,"id":"g2","notes":"230 - SAT","spread":-29.5,"wager":"Regular"},{"away":"BAY","awayScore":16,"espnId":null,"favorite":"AUB","final":true,"hammerBy":null,"home":"AUB","homeScore":17,"id":"g3","notes":"230 - SAT","spread":-7.5,"wager":"Regular"},{"away":"TULANE","awayScore":3,"espnId":null,"favorite":"DUKE","final":true,"hammerBy":null,"home":"DUKE","homeScore":17,"id":"g4","notes":"230 - SAT","spread":-7.5,"wager":"Regular"},{"away":"UCLA","awayScore":45,"espnId":null,"favorite":"UCLA","final":true,"hammerBy":null,"home":"CAL","homeScore":24,"id":"g5","notes":"930 - SAT","spread":-2.5,"wager":"Regular"},{"away":"CLEM","awayScore":10,"espnId":null,"favorite":"LSU","final":true,"hammerBy":"DANNY","home":"LSU","homeScore":51,"id":"g6","notes":"630 - SAT","spread":-10.5,"wager":"Hammer"},{"away":"WISC","awayScore":13,"espnId":null,"favorite":"ND","final":true,"hammerBy":null,"home":"ND","homeScore":41,"id":"g7","notes":"630 - SUN (Lambeau)","spread":-20.5,"wager":"Regular"},{"away":"LOU","awayScore":38,"espnId":null,"favorite":"MISS","final":true,"hammerBy":"ALEX","home":"MISS","homeScore":41,"id":"g8","notes":"630 - SUN (Mutual Site)","spread":-6.5,"wager":"Hammer"},{"away":"SMU","awayScore":27,"espnId":null,"favorite":"SMU","final":true,"hammerBy":"NOBLE","home":"FSU","homeScore":24,"id":"g9","notes":"630 - MON","spread":-2.5,"wager":"Hammer"}],
+       "picks":{"ALEX":{"g1":"MIA","g2":"TXST","g3":"BAY","g4":"TULANE","g5":"CAL","g6":"CLEM","g7":"ND","g8":"MISS","g9":"SMU"},"DANNY":{"g1":"MIA","g2":"TEX","g3":"AUB","g4":"TULANE","g5":"UCLA","g6":"LSU","g7":"WISC","g8":"MISS","g9":"SMU"},"NEEL":{"g1":"STAN","g2":"TEX","g3":"BAY","g4":"TULANE","g5":"CAL","g6":"CLEM","g7":"WISC","g8":"LOU","g9":"SMU"},"NOBLE":{"g1":"MIA","g2":"TXST","g3":"AUB","g4":"DUKE","g5":"UCLA","g6":"CLEM","g7":"ND","g8":"MISS","g9":"FSU"}}},
+      {"id":"week2-sde2ile","createdAt":"2026-09-08T16:25:19.774Z","label":"Week 2","order":2,
+       "participants":["ALEX","NEEL","NOBLE","DANNY"],
+       "games":[{"away":"Missouri","awayScore":null,"espnId":null,"favorite":"Missouri","final":false,"hammerBy":null,"home":"Kansas","homeScore":null,"id":"gncwyzhl","notes":"Friday 7pm","spread":-4.5,"wager":"Regular"}],
+       "picks":{"ALEX":{"gncwyzhl":null}}}
+    ];
+    try{
+      await db.doc('meta/roster').set({ people: roster });
+      for (var i=0;i<weeksData.length;i++){
+        var w = weeksData[i];
+        var id = w.id; var data = Object.assign({}, w); delete data.id;
+        await db.collection('weeks').doc(id).set(data);
+      }
+      console.log('Seed complete: roster + Week 1 + Week 2 written to Firestore.');
+    }catch(e){
+      console.error('seed failed', e);
+    }
+  };
+
+  // ---------------- tabs ----------------
+  document.querySelectorAll('nav.tabs button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('nav.tabs button').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      state.tab = btn.getAttribute('data-tab');
+      render(true);
+    });
+  });
+
+  init();
+})();
+</script>
+</body>
+</html>
