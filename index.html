@@ -209,7 +209,28 @@
   .pick-toggle button.sel{ background:var(--gold); color:#1c1300; }
   .pick-toggle button.correct{ background:var(--green); color:#fff; }
   .pick-toggle button.wrong{ background:var(--red-soft); color:var(--red); text-decoration:line-through; }
+  .pick-toggle button.locked{ cursor:not-allowed; opacity:0.7; }
+
+  /* compact "who's on which side" view, shown once a week is locked */
+  .picks-compact{ display:grid; grid-template-columns:1fr 1fr; gap:0; padding:10px 14px 14px; }
+  .pick-side{ padding:0 10px; }
+  .pick-side:first-child{ border-right:1px solid var(--line); }
+  .side-label{ font-family:var(--font-mono); font-size:11.5px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.03em; margin-bottom:5px; }
+  .side-names{ display:flex; flex-wrap:wrap; gap:5px 10px; }
+  .side-name{ font-size:13px; font-weight:600; color:var(--ink-dim); }
+  .side-name.correct{ color:var(--green); }
+  .side-name.wrong{ color:var(--red); text-decoration:line-through; }
+  .side-name.none{ color:var(--ink-faint); font-weight:400; font-style:italic; }
+  @media (max-width:520px){ .picks-compact{ grid-template-columns:1fr; } .pick-side:first-child{ border-right:none; border-bottom:1px solid var(--line); padding-bottom:8px; margin-bottom:8px; } }
   .pick-amt{ font-size:10.5px; font-family:var(--font-mono); color:var(--ink-faint); }
+
+  .hammer-select{
+    font-size:10px; text-transform:uppercase; letter-spacing:.03em; font-weight:700;
+    padding:2px 16px 2px 6px; border-radius:6px; cursor:pointer; margin-top:3px;
+    font-family:var(--font-body); border:1px solid var(--line); background:var(--surface); color:var(--ink-faint);
+  }
+  .hammer-select.hammer-set{ background:var(--red-soft); color:var(--red); border-color:transparent; }
+  .hammer-tag{ font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:var(--red); margin-left:5px; }
 
   .add-game-form{ display:grid; grid-template-columns:repeat(6,1fr); gap:8px; padding:14px 18px; border-top:1px solid var(--line); }
   .add-game-form label{ font-size:11px; color:var(--ink-faint); display:block; margin-bottom:3px; }
@@ -276,6 +297,57 @@
 
   .lock-btn{ display:flex; align-items:center; gap:5px; font-size:12px; }
   .lock-btn .ico{ font-size:13px; }
+
+  .kickoff-badge{ font-size:12px; color:var(--ink-dim); font-family:var(--font-mono); white-space:nowrap; }
+
+  .settle-list{ display:flex; flex-direction:column; }
+  .settle-row{ display:flex; align-items:center; gap:8px; padding:9px 18px; border-bottom:1px solid var(--line); font-size:13.5px; }
+  .settle-row:last-child{ border-bottom:none; }
+  .settle-from{ font-weight:700; color:var(--red); }
+  .settle-arrow{ color:var(--ink-faint); }
+  .settle-to{ font-weight:700; color:var(--green); }
+  .settle-amt{ margin-left:auto; font-weight:700; }
+
+  /* ---------- summary tab ---------- */
+  .summary-toolbar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+  .summary-toolbar .btn.active{ background:var(--gold); border-color:var(--gold); color:#1c1300; }
+
+  .part-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
+  .part-card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+  .part-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:13px 16px; border-bottom:1px solid var(--line); background:var(--surface-2); }
+  .part-name{ font-family:var(--font-display); font-size:16px; letter-spacing:.02em; text-transform:uppercase; }
+  .part-total{ font-family:var(--font-mono); font-weight:700; font-size:15px; }
+  .part-games{ display:flex; flex-direction:column; }
+  .prow{ display:flex; align-items:center; gap:10px; padding:9px 16px; border-bottom:1px solid var(--line); font-size:13px; }
+  .prow:last-child{ border-bottom:none; }
+  .prow .when{ width:80px; flex:none; color:var(--ink-faint); font-family:var(--font-mono); font-size:10.5px; line-height:1.3; }
+  .prow .pick{ flex:1; min-width:0; }
+  .prow .pick .team{ font-weight:700; }
+  .prow .pick .vs{ color:var(--ink-faint); font-weight:400; font-size:12px; }
+  .prow .result{ width:60px; flex:none; text-align:right; font-family:var(--font-mono); font-weight:700; font-size:12px; }
+  .prow.correct .pick .team{ color:var(--green); }
+  .prow.wrong .pick .team{ color:var(--red); text-decoration:line-through; }
+  .prow.pending .result{ color:var(--ink-faint); }
+  .no-pick{ color:var(--ink-faint); font-style:italic; font-size:12px; }
+
+  .game-grid{ display:flex; flex-direction:column; gap:12px; }
+  .g-card{ background:var(--surface); border:1px solid var(--line); border-radius:12px; overflow:hidden; box-shadow:var(--shadow); }
+  .g-top{ display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--surface-2); flex-wrap:wrap; }
+  .g-matchup{ font-family:var(--font-display); font-size:16px; }
+  .g-wager{ font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; padding:3px 8px; border-radius:999px; }
+  .g-wager.wager-Regular{ background:var(--surface); color:var(--ink-faint); border:1px solid var(--line); }
+  .g-wager.wager-Hammer, .g-wager.wager-DoubleHammer, .g-wager.wager-GOW, .g-wager.wager-GOWHammer, .g-wager.wager-GOWDoubleHammer{ background:var(--red-soft); color:var(--red); }
+  .g-when{ margin-left:auto; font-family:var(--font-mono); font-size:12px; color:var(--ink-dim); }
+  .g-sides{ display:grid; grid-template-columns:1fr 1fr; }
+  .g-side{ padding:10px 14px; }
+  .g-side:first-child{ border-right:1px solid var(--line); }
+  .g-side-label{ font-family:var(--font-mono); font-size:11px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; margin-bottom:6px; }
+  .g-names{ display:flex; flex-wrap:wrap; gap:6px 10px; }
+  .g-name{ font-size:13px; font-weight:600; color:var(--ink-dim); }
+  .g-name.win{ color:var(--green); } .g-name.loss{ color:var(--red); text-decoration:line-through; }
+  @media (max-width:520px){ .g-sides{ grid-template-columns:1fr; } .g-side:first-child{ border-right:none; border-bottom:1px solid var(--line); } }
+  .game-lock-btn{ display:flex; align-items:center; gap:4px; font-size:11.5px; padding:4px 8px; }
+  .game-lock-btn.on{ background:var(--red-soft); border-color:var(--red); color:var(--red); }
 </style>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
 </head>
@@ -308,12 +380,14 @@
   </div>
   <nav class="tabs">
     <button class="active" data-tab="week">This Week</button>
+    <button data-tab="summary">Summary</button>
     <button data-tab="season">Season</button>
   </nav>
 </header>
 
 <main>
   <div id="weekView"></div>
+  <div id="summaryView" style="display:none;"></div>
   <div id="seasonView" style="display:none;"></div>
 </main>
 
@@ -355,6 +429,33 @@
   var WAGER_KEY = {"Regular":50,"Hammer":100,"Double Hammer":200,"GOW":100,"GOW & Hammer":200,"GOW & Double Hammer":400};
   var WAGER_BADGE_CLASS = {"Regular":"wager-Regular","Hammer":"wager-Hammer","Double Hammer":"wager-DoubleHammer","GOW":"wager-GOW","GOW & Hammer":"wager-GOWHammer","GOW & Double Hammer":"wager-GOWDoubleHammer"};
 
+  // College-football week runs Thursday through Wednesday, so that's the
+  // sort order for "Day of week" — not the calendar week (Sun-Sat).
+  var DOW_OPTIONS = ["Thursday","Friday","Saturday","Sunday","Monday","Tuesday","Wednesday"];
+  function dowIndex(d){ var i = DOW_OPTIONS.indexOf(d); return i === -1 ? 99 : i; }
+  // Sort key: games with a Day of week + Kickoff time set sort by those;
+  // games without them (older weeks entered before this feature, or a game
+  // someone skipped filling in) keep their original relative order at the
+  // end, so nothing already entered gets shuffled around.
+  function sortedGames(games){
+    return (games||[]).map(function(g,i){ return {g:g, i:i}; }).sort(function(a,b){
+      var da = dowIndex(a.g.dayOfWeek), db = dowIndex(b.g.dayOfWeek);
+      if (da !== db) return da - db;
+      var ta = a.g.kickoff || '', tb = b.g.kickoff || '';
+      if (!!ta !== !!tb) return ta ? -1 : 1; // has a time beats no time, within the same day
+      if (ta !== tb) return ta < tb ? -1 : 1;
+      return a.i - b.i; // stable fallback
+    }).map(function(x){ return x.g; });
+  }
+  function formatKickoff(t){
+    if (!t) return '';
+    var parts = t.split(':'); if (parts.length < 2) return t;
+    var h = parseInt(parts[0],10), m = parts[1];
+    var ampm = h >= 12 ? 'PM' : 'AM';
+    var h12 = h % 12; if (h12 === 0) h12 = 12;
+    return h12 + ':' + m + ' ' + ampm;
+  }
+
   var state = {
     roster: [],
     weeks: [],            // [{id, data}], ordered
@@ -363,6 +464,7 @@
     editingWeek: false,
     editTimer: null,
     editMode: false,       // unlocked with the shared PIN — gates all writes
+    summarySubTab: 'person', // 'person' or 'game' — which layout the Summary tab shows
   };
 
   var db = null;
@@ -417,9 +519,42 @@
     return e;
   }
   function fmt(n){
-    n = Math.round(n);
-    var sign = n < 0 ? '-' : (n > 0 ? '+' : '');
-    return sign + '$' + Math.abs(n);
+    n = Math.round(n*100)/100; // cents precision, so weekly settlements net to exactly zero
+    var sign = n < -0.004 ? '-' : (n > 0.004 ? '+' : '');
+    return sign + '$' + Math.abs(n).toFixed(2);
+  }
+  function fmtPlain(n){ // same as fmt() but no leading +/- sign, for "pays $x.xx" phrasing
+    n = Math.round(n*100)/100;
+    return '$' + Math.abs(n).toFixed(2);
+  }
+
+  // Minimizes the number of payments needed to settle a week: repeatedly
+  // matches the biggest net winner with the biggest net loser until
+  // everyone's balance is zero. (True minimum-transaction settlement is
+  // NP-hard in general; this greedy largest-to-largest match is the
+  // standard practical approach — same idea Splitwise-style apps use —
+  // and is optimal or near-optimal in every realistic case here.)
+  function computeSettlements(totals){
+    var creditors = [], debtors = [];
+    Object.keys(totals).forEach(function(p){
+      var amt = Math.round((totals[p]||0)*100)/100;
+      if (amt > 0.004) creditors.push({name:p, amt:amt});
+      else if (amt < -0.004) debtors.push({name:p, amt:-amt});
+    });
+    creditors.sort(function(a,b){ return b.amt-a.amt; });
+    debtors.sort(function(a,b){ return b.amt-a.amt; });
+    var payments = [];
+    var ci=0, di=0;
+    while (ci < creditors.length && di < debtors.length){
+      var c = creditors[ci], d = debtors[di];
+      var pay = Math.round(Math.min(c.amt, d.amt)*100)/100;
+      if (pay > 0.004) payments.push({from:d.name, to:c.name, amount:pay});
+      c.amt = Math.round((c.amt-pay)*100)/100;
+      d.amt = Math.round((d.amt-pay)*100)/100;
+      if (c.amt <= 0.004) ci++;
+      if (d.amt <= 0.004) di++;
+    }
+    return payments;
   }
   function clsFor(n){ return n > 0.001 ? 'pos' : (n < -0.001 ? 'neg' : 'zero'); }
   function uid(prefix){ return prefix + Math.random().toString(36).slice(2,9); }
@@ -527,13 +662,20 @@
       var homeOpt = el('option', null, g.home + ' favored'); homeOpt.value = 'home';
       favSel.appendChild(awayOpt); favSel.appendChild(homeOpt);
       favSel.value = (g.favorite === g.away) ? 'away' : 'home';
+      var daySel = el('select');
+      var dayNone = el('option', null, '— pick a day —'); dayNone.value = '';
+      daySel.appendChild(dayNone);
+      DOW_OPTIONS.forEach(function(d){ var o = el('option', null, d); o.value = d; if (g.dayOfWeek === d) o.selected = true; daySel.appendChild(o); });
+      var kickoff = el('input'); kickoff.type='time'; kickoff.value = g.kickoff || '';
       var hammerBy = el('input'); hammerBy.type='text'; hammerBy.value = g.hammerBy || ''; hammerBy.placeholder = 'who hammered? (optional)';
-      var notes = el('input'); notes.type='text'; notes.value = g.notes || ''; notes.placeholder = 'kickoff / notes (optional)';
+      var notes = el('input'); notes.type='text'; notes.value = g.notes || ''; notes.placeholder = 'anything else? (optional)';
 
       modalCard.appendChild(field('Away team', away));
       modalCard.appendChild(field('Home team', home));
       modalCard.appendChild(field('Spread (favorite line)', spread));
       modalCard.appendChild(field('Favorite', favSel));
+      modalCard.appendChild(field('Day of week', daySel));
+      modalCard.appendChild(field('Kickoff time', kickoff));
       modalCard.appendChild(field('Hammer called by', hammerBy));
       modalCard.appendChild(field('Notes', notes));
 
@@ -550,6 +692,8 @@
         closeModal({
           away: a, home: h, spread: sp,
           favorite: favSel.value === 'away' ? a : h,
+          dayOfWeek: daySel.value || null,
+          kickoff: kickoff.value || null,
           hammerBy: hammerBy.value.trim() || null,
           notes: notes.value.trim() || null,
         });
@@ -712,7 +856,9 @@
   // Leave it false (the default) only for re-renders triggered by a REMOTE
   // db snapshot arriving while this viewer might be mid-edit.
   function render(force){
-    if (state.tab === 'week') renderWeekTab(force); else renderSeasonTab();
+    if (state.tab === 'week') renderWeekTab(force);
+    else if (state.tab === 'summary') renderSummaryTab();
+    else renderSeasonTab();
   }
 
   function setEditing(on){
@@ -721,6 +867,7 @@
 
   function renderWeekTab(force){
     $('#weekView').style.display = '';
+    $('#summaryView').style.display = 'none';
     $('#seasonView').style.display = 'none';
     if (state.editingWeek && !force) return; // don't yank focus while typing
 
@@ -757,6 +904,7 @@
     var left = el('div','panel');
     var head = el('div','panel-head');
     head.appendChild(el('h2', null, escapeHtml(week.data.label || 'Week')));
+    if (week.data.locked) head.appendChild(el('span','badge final','🔒 PICKS LOCKED'));
     var renameBtn = el('button','btn ghost small','rename');
     renameBtn.addEventListener('click', async function(){
       if (!requireEdit()) return;
@@ -764,6 +912,18 @@
       if (next){ mutateWeek(week.id, function(d){ d.label = next; }); }
     });
     head.appendChild(renameBtn);
+    var lockBtn = el('button','btn small'+(week.data.locked?'':' primary'), week.data.locked ? '🔓 Unlock picks' : '🔒 Lock picks');
+    lockBtn.addEventListener('click', async function(){
+      if (!requireEdit()) return;
+      if (week.data.locked){
+        var ok = await showConfirm('Unlock picks for this week? Everyone will be able to change their picks again.');
+        if (ok) mutateWeek(week.id, function(d){ d.locked = false; });
+      } else {
+        var ok2 = await showConfirm('Lock picks for this week? No one will be able to change a pick until you unlock it again.');
+        if (ok2) mutateWeek(week.id, function(d){ d.locked = true; });
+      }
+    });
+    head.appendChild(lockBtn);
     left.appendChild(head);
 
     // wager key
@@ -812,7 +972,7 @@
     // games
     var gamesWrap = el('div','games');
     var participants = week.data.participants || [];
-    (week.data.games||[]).forEach(function(g){
+    sortedGames(week.data.games).forEach(function(g){
       gamesWrap.appendChild(renderGameCard(week, g, participants, comp));
     });
     if (!(week.data.games||[]).length){
@@ -843,6 +1003,27 @@
       list.appendChild(row);
     });
     right.appendChild(list);
+
+    // settle up — minimum set of payments to zero everyone out this week
+    var settleHead = el('div','panel-head');
+    settleHead.style.borderTop = '1px solid var(--line)';
+    settleHead.appendChild(el('h2', null, 'Settle Up'));
+    right.appendChild(settleHead);
+    var settleWrap = el('div','settle-list');
+    var payments = computeSettlements(comp.totals);
+    if (!payments.length){
+      settleWrap.appendChild(el('div','empty','Nobody owes anybody — all settled.'));
+    } else {
+      payments.forEach(function(p){
+        var row = el('div','settle-row');
+        row.appendChild(el('span','settle-from', escapeHtml(p.from)));
+        row.appendChild(el('span','settle-arrow', '→'));
+        row.appendChild(el('span','settle-to', escapeHtml(p.to)));
+        row.appendChild(el('span','settle-amt mono', fmtPlain(p.amount)));
+        settleWrap.appendChild(row);
+      });
+    }
+    right.appendChild(settleWrap);
     layout.appendChild(right);
 
     root.appendChild(selRow);
@@ -868,6 +1049,10 @@
       (g.home===g.favorite?'<span class="fav">'+escapeHtml(g.home)+'</span>':escapeHtml(g.home));
     top.appendChild(matchup);
     top.appendChild(el('div','spread mono', (g.favorite||'') + ' ' + (g.spread>0?'+':'') + g.spread));
+    if (g.dayOfWeek || g.kickoff){
+      var koLabel = (g.dayOfWeek||'') + (g.dayOfWeek && g.kickoff ? ' ' : '') + formatKickoff(g.kickoff);
+      top.appendChild(el('div','kickoff-badge', escapeHtml(koLabel)));
+    }
     var wagerSelect = el('select','wager-select '+(WAGER_BADGE_CLASS[g.wager]||'wager-Regular'));
     wagerSelect.title = 'Change wager type';
     Object.keys(WAGER_KEY).forEach(function(k){
@@ -900,6 +1085,7 @@
         if (!game) return;
         game.away = updated.away; game.home = updated.home;
         game.spread = updated.spread; game.favorite = updated.favorite;
+        game.dayOfWeek = updated.dayOfWeek; game.kickoff = updated.kickoff;
         game.hammerBy = updated.hammerBy; game.notes = updated.notes;
         // If a team name actually changed, remap any picks already made
         // against the old name so they don't silently fall off the board.
@@ -921,7 +1107,20 @@
         mutateWeek(week.id, function(d){ d.games = d.games.filter(function(x){ return x.id !== g.id; }); });
       }
     });
+    var gameLockBtn = el('button','btn small game-lock-btn'+(g.locked?' on':''), (g.locked?'🔒 Picks locked':'🔓 Lock this pick'));
+    gameLockBtn.title = 'Lock/unlock picks for just this game (separate from the whole-week lock)';
+    gameLockBtn.addEventListener('click', async function(){
+      if (!requireEdit()) return;
+      if (g.locked){
+        var ok = await showConfirm('Unlock picks for ' + g.away + ' at ' + g.home + '? People will be able to change their pick on this game again.');
+        if (ok) mutateWeek(week.id, function(d){ var game = d.games.find(function(x){ return x.id===g.id; }); if (game) game.locked = false; });
+      } else {
+        var ok2 = await showConfirm('Lock picks for ' + g.away + ' at ' + g.home + '? No one will be able to change their pick on just this game until you unlock it again.');
+        if (ok2) mutateWeek(week.id, function(d){ var game = d.games.find(function(x){ return x.id===g.id; }); if (game) game.locked = true; });
+      }
+    });
     top.appendChild(spacer);
+    top.appendChild(gameLockBtn);
     top.appendChild(editBtn);
     top.appendChild(delBtn);
     card.appendChild(top);
@@ -963,39 +1162,91 @@
     else if (result.push) scoreRow.appendChild(el('span','winner-tag push','push — no money'));
     card.appendChild(scoreRow);
 
-    var picksGrid = el('div','picks-grid');
-    participants.forEach(function(person){
-      var pk = (week.data.picks[person]||{})[g.id];
-      var unit = el('div','pick-unit');
-      unit.appendChild(el('div','pick-name', escapeHtml(person)));
-      var toggle = el('div','pick-toggle');
-      [g.away, g.home].forEach(function(team){
-        var b = el('button', null, escapeHtml(team));
-        var isSel = pk === team;
-        var cls = '';
-        if (isSel){
-          cls = 'sel';
-          if (result.winner) cls = (result.winner===team) ? 'correct' : 'wrong';
-        }
-        b.className = cls;
-        b.addEventListener('click', function(){
-          if (!requireEdit()) return;
+    if (week.data.locked || g.locked){
+      card.appendChild(renderPicksCompact(week, g, participants, result));
+    } else {
+      var picksGrid = el('div','picks-grid');
+      participants.forEach(function(person){
+        var pk = (week.data.picks[person]||{})[g.id];
+        var unit = el('div','pick-unit');
+        unit.appendChild(el('div','pick-name', escapeHtml(person)));
+        var toggle = el('div','pick-toggle');
+        [g.away, g.home].forEach(function(team){
+          var b = el('button', null, escapeHtml(team));
+          var isSel = pk === team;
+          var cls = '';
+          if (isSel){
+            cls = 'sel';
+            if (result.winner) cls = (result.winner===team) ? 'correct' : 'wrong';
+          }
+          b.className = cls;
+          b.addEventListener('click', function(){
+            if (!requireEdit()) return;
+            mutateWeek(week.id, function(d){
+              d.picks = d.picks || {};
+              d.picks[person] = d.picks[person] || {};
+              d.picks[person][g.id] = (d.picks[person][g.id] === team) ? null : team;
+            });
+          });
+          toggle.appendChild(b);
+        });
+        unit.appendChild(toggle);
+        var hammerCall = (g.hammerCalls || {})[person] || '';
+        var hammerSel = el('select','hammer-select'+(hammerCall?' hammer-set':''));
+        [['', '—'],['Hammer','Hammer'],['ReHammer','Re-Hammer']].forEach(function(pair){
+          var o = el('option', null, pair[1]); o.value = pair[0];
+          if (hammerCall === pair[0]) o.selected = true;
+          hammerSel.appendChild(o);
+        });
+        hammerSel.title = 'Did ' + person + ' hammer or re-hammer this game?';
+        hammerSel.addEventListener('change', function(){
+          if (!requireEdit()) { hammerSel.value = hammerCall; return; }
+          var val = hammerSel.value;
           mutateWeek(week.id, function(d){
-            d.picks = d.picks || {};
-            d.picks[person] = d.picks[person] || {};
-            d.picks[person][g.id] = (d.picks[person][g.id] === team) ? null : team;
+            var game = d.games.find(function(x){ return x.id===g.id; });
+            if (!game) return;
+            game.hammerCalls = game.hammerCalls || {};
+            if (val) game.hammerCalls[person] = val; else delete game.hammerCalls[person];
           });
         });
-        toggle.appendChild(b);
+        unit.appendChild(hammerSel);
+        var amt = result.perPerson && (person in result.perPerson) ? result.perPerson[person] : null;
+        if (amt !== null) unit.appendChild(el('div','pick-amt '+clsFor(amt), fmt(amt)));
+        picksGrid.appendChild(unit);
       });
-      unit.appendChild(toggle);
-      var amt = result.perPerson && (person in result.perPerson) ? result.perPerson[person] : null;
-      if (amt !== null) unit.appendChild(el('div','pick-amt '+clsFor(amt), fmt(amt)));
-      picksGrid.appendChild(unit);
-    });
-    card.appendChild(picksGrid);
+      card.appendChild(picksGrid);
+    }
 
     return card;
+  }
+
+  // Compact "who's on which side" summary shown once a week's picks are
+  // locked — groups participants by the team they picked instead of the
+  // full per-person toggle grid, so a crowded week reads at a glance.
+  function renderPicksCompact(week, g, participants, result){
+    var wrap = el('div','picks-compact');
+    [g.away, g.home].forEach(function(team){
+      var side = el('div','pick-side');
+      side.appendChild(el('div','side-label', escapeHtml(team)));
+      var names = el('div','side-names');
+      var any = false;
+      participants.forEach(function(person){
+        var pk = (week.data.picks[person]||{})[g.id];
+        if (pk !== team) return;
+        any = true;
+        var cls = 'side-name';
+        if (result.winner) cls += (result.winner===team) ? ' correct' : ' wrong';
+        var amt = result.perPerson && (person in result.perPerson) ? result.perPerson[person] : null;
+        var hammerCall = (g.hammerCalls || {})[person];
+        var hammerLbl = hammerCall === 'Hammer' ? ' <span class="hammer-tag">HAMMER</span>' : (hammerCall === 'ReHammer' ? ' <span class="hammer-tag">RE-HAMMER</span>' : '');
+        var label = escapeHtml(person) + hammerLbl + (amt !== null ? ' <span class="mono">'+fmt(amt)+'</span>' : '');
+        names.appendChild(el('span', cls, label));
+      });
+      if (!any) names.appendChild(el('span','side-name none','—'));
+      side.appendChild(names);
+      wrap.appendChild(side);
+    });
+    return wrap;
   }
 
   function renderAddGameForm(week){
@@ -1013,14 +1264,27 @@
     ['Away favored','Home favored'].forEach(function(t,i){ var o=el('option',null,t); o.value=i; favSel.appendChild(o); });
     var wagerSel = el('select');
     Object.keys(WAGER_KEY).forEach(function(k){ var o=el('option',null,k+' ($'+WAGER_KEY[k]+')'); o.value=k; wagerSel.appendChild(o); });
+    var daySel = el('select');
+    var dayNone = el('option', null, '— pick a day —'); dayNone.value = ''; daySel.appendChild(dayNone);
+    DOW_OPTIONS.forEach(function(d){ var o=el('option',null,d); o.value=d; daySel.appendChild(o); });
+    var kickoff = el('input'); kickoff.type='time';
+    var lockNow = el('input'); lockNow.type='checkbox';
     var hammerBy = el('input'); hammerBy.type='text'; hammerBy.placeholder='who hammered? (optional)';
-    var notes = el('input'); notes.type='text'; notes.placeholder='kickoff / notes (optional)';
+    var notes = el('input'); notes.type='text'; notes.placeholder='anything else? (optional)';
 
     form.appendChild(field('Away team', away));
     form.appendChild(field('Home team', home));
     form.appendChild(field('Spread (favorite line)', spread));
     form.appendChild(field('Favorite', favSel));
+    form.appendChild(field('Day of week', daySel));
+    form.appendChild(field('Kickoff time', kickoff));
     form.appendChild(field('Wager', wagerSel));
+    var lockWrap = el('div');
+    var lockLbl = el('label', null, 'Lock picks now');
+    lockLbl.style.cssText = 'font-size:11px;color:var(--ink-faint);display:flex;align-items:center;gap:5px;margin-bottom:3px;';
+    lockLbl.insertBefore(lockNow, lockLbl.firstChild);
+    lockWrap.appendChild(lockLbl);
+    form.appendChild(lockWrap);
     form.appendChild(field('Hammer called by', hammerBy));
     form.appendChild(field('Notes', notes, true));
 
@@ -1037,14 +1301,15 @@
         var favorite = favSel.value === '0' ? a : h;
         var g = {
           id: uid('g'), away:a, home:h, favorite:favorite, spread: sp,
+          dayOfWeek: daySel.value || null, kickoff: kickoff.value || null,
           wager: wagerSel.value, hammerBy: hammerBy.value.trim() || null,
-          notes: notes.value.trim() || null,
+          notes: notes.value.trim() || null, locked: !!lockNow.checked,
           awayScore: null, homeScore: null, final: false, espnId: null
         };
         var wk = currentWeek() || week;
         if (!wk){ showToast('No week is selected — pick or create a week first.'); return; }
         mutateWeek(wk.id, function(d){ d.games = d.games || []; d.games.push(g); });
-        away.value=''; home.value=''; spread.value=''; hammerBy.value=''; notes.value='';
+        away.value=''; home.value=''; spread.value=''; hammerBy.value=''; notes.value=''; daySel.value=''; kickoff.value=''; lockNow.checked=false;
         showToast('Added ' + a + ' at ' + h + '.');
       }catch(err){
         console.error('add game failed', err);
@@ -1073,9 +1338,151 @@
     }
   }
 
+  // ---------------- summary tab ----------------
+  // Same numbers as "This Week", grouped a different way: one card per
+  // participant showing every game they're on, plus a by-game view for
+  // comparison, plus the same Settle Up panel.
+  function renderSummaryTab(){
+    $('#weekView').style.display = 'none';
+    $('#seasonView').style.display = 'none';
+    $('#summaryView').style.display = '';
+    var root = $('#summaryView');
+    root.innerHTML = '';
+
+    if (!state.weeks.length){
+      root.appendChild(el('div','panel panel-pad empty','No weeks yet.'));
+      return;
+    }
+    var week = currentWeek();
+    if (!week){
+      root.appendChild(el('div','panel panel-pad empty','Pick a week from "This Week" first.'));
+      return;
+    }
+    var comp = computeWeek(week.data);
+    var games = sortedGames(week.data.games);
+    var participants = week.data.participants || [];
+
+    // week label + sub-tab toolbar
+    var titleRow = el('div', null, '<h2 style="margin:0 0 4px;">'+escapeHtml(week.data.label||'Week')+' — Summary</h2>');
+    root.appendChild(titleRow);
+    var toolbar = el('div','summary-toolbar');
+    var byPersonBtn = el('button','btn small'+(state.summarySubTab==='person'?' active':''),'By participant');
+    var byGameBtn = el('button','btn small'+(state.summarySubTab==='game'?' active':''),'By game');
+    byPersonBtn.addEventListener('click', function(){ state.summarySubTab='person'; render(true); });
+    byGameBtn.addEventListener('click', function(){ state.summarySubTab='game'; render(true); });
+    toolbar.appendChild(byPersonBtn); toolbar.appendChild(byGameBtn);
+    root.appendChild(toolbar);
+
+    if (!participants.length || !games.length){
+      root.appendChild(el('div','panel panel-pad empty','Add participants and games in "This Week" to see the summary.'));
+      return;
+    }
+
+    if (state.summarySubTab === 'person'){
+      var partGrid = el('div','part-grid');
+      var rows = participants.map(function(p){ return {name:p, amt: comp.totals[p]||0}; });
+      rows.sort(function(a,b){ return b.amt - a.amt; });
+      rows.forEach(function(row){
+        var card = el('div','part-card');
+        var head = el('div','part-head');
+        head.innerHTML = '<span class="part-name">'+escapeHtml(row.name)+'</span><span class="part-total mono '+clsFor(row.amt)+'">'+fmt(row.amt)+'</span>';
+        card.appendChild(head);
+        var list = el('div','part-games');
+        games.forEach(function(g){
+          var pk = (week.data.picks[row.name]||{})[g.id];
+          var result = comp.gameResults[g.id] || {};
+          var prow = el('div','prow');
+          var when = (g.dayOfWeek?g.dayOfWeek.slice(0,3):'') + (g.kickoff? '<br>'+formatKickoff(g.kickoff) : '');
+          prow.appendChild(el('div','when', when || '—'));
+          var pickEl = el('div','pick');
+          if (pk){
+            var opp = pk===g.away ? g.home : g.away;
+            pickEl.innerHTML = '<span class="team">'+escapeHtml(pk)+'</span> <span class="vs">vs '+escapeHtml(opp)+'</span>';
+          } else {
+            pickEl.innerHTML = '<span class="no-pick">no pick</span>';
+          }
+          prow.appendChild(pickEl);
+          var resEl = el('div','result');
+          if (pk && result.status !== 'pending' && !result.push){
+            var won = result.winner === pk;
+            prow.classList.add(won ? 'correct' : 'wrong');
+            var amt = result.perPerson && (row.name in result.perPerson) ? result.perPerson[row.name] : null;
+            resEl.textContent = amt !== null ? fmt(amt) : (won ? 'W' : 'L');
+            if (amt !== null) resEl.classList.add(clsFor(amt));
+          } else if (result.push){
+            resEl.textContent = 'push';
+          } else {
+            prow.classList.add('pending');
+            resEl.textContent = result.status === 'pending' ? '—' : 'live';
+          }
+          prow.appendChild(resEl);
+          list.appendChild(prow);
+        });
+        card.appendChild(list);
+        partGrid.appendChild(card);
+      });
+      root.appendChild(partGrid);
+    } else {
+      var gameGrid = el('div','game-grid');
+      games.forEach(function(g){
+        var result = comp.gameResults[g.id] || {};
+        var card = el('div','g-card');
+        var top = el('div','g-top');
+        var wagerCls = WAGER_BADGE_CLASS[g.wager] || 'wager-Regular';
+        top.innerHTML = '<span class="g-matchup">'+escapeHtml(g.away)+' <span style="color:var(--ink-faint);font-weight:400;">at</span> '+escapeHtml(g.home)+'</span>'+
+          '<span class="g-wager '+wagerCls+'">'+escapeHtml(g.wager||'Regular')+'</span>'+
+          '<span class="g-when">'+escapeHtml((g.dayOfWeek||'')+' '+formatKickoff(g.kickoff))+'</span>';
+        card.appendChild(top);
+        var sides = el('div','g-sides');
+        [g.away, g.home].forEach(function(team){
+          var side = el('div','g-side');
+          side.appendChild(el('div','g-side-label', escapeHtml(team)));
+          var names = el('div','g-names');
+          var any = false;
+          participants.forEach(function(p){
+            var pk = (week.data.picks[p]||{})[g.id];
+            if (pk !== team) return;
+            any = true;
+            var cls = 'g-name';
+            if (result.winner) cls += (result.winner===team ? ' win' : ' loss');
+            names.appendChild(el('span', cls, escapeHtml(p)));
+          });
+          if (!any) names.appendChild(el('span', null, '—')).style.cssText = 'color:var(--ink-faint);font-style:italic;';
+          side.appendChild(names);
+          sides.appendChild(side);
+        });
+        card.appendChild(sides);
+        gameGrid.appendChild(card);
+      });
+      root.appendChild(gameGrid);
+    }
+
+    // settle up
+    var settlePanel = el('div','panel'); settlePanel.style.marginTop = '20px';
+    var sHead = el('div','panel-head'); sHead.appendChild(el('h2', null, 'Settle Up'));
+    settlePanel.appendChild(sHead);
+    var settleWrap = el('div','settle-list');
+    var payments = computeSettlements(comp.totals);
+    if (!payments.length){
+      settleWrap.appendChild(el('div','empty','Nobody owes anybody — all settled.'));
+    } else {
+      payments.forEach(function(p){
+        var row = el('div','settle-row');
+        row.appendChild(el('span','settle-from', escapeHtml(p.from)));
+        row.appendChild(el('span','settle-arrow', '→'));
+        row.appendChild(el('span','settle-to', escapeHtml(p.to)));
+        row.appendChild(el('span','settle-amt mono', fmtPlain(p.amount)));
+        settleWrap.appendChild(row);
+      });
+    }
+    settlePanel.appendChild(settleWrap);
+    root.appendChild(settlePanel);
+  }
+
   // ---------------- season tab ----------------
   function renderSeasonTab(){
     $('#weekView').style.display = 'none';
+    $('#summaryView').style.display = 'none';
     $('#seasonView').style.display = '';
     var root = $('#seasonView');
     root.innerHTML = '';
