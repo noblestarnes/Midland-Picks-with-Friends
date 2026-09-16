@@ -1,0 +1,43 @@
+name: Sync ESPN Scores to Firestore
+
+# Runs entirely on GitHub's own infrastructure — no Claude session or
+# manual approval needed. Fires every 15 minutes during game windows
+# (times below are UTC; see the note at the bottom for DST/bowl-season
+# adjustments), plus you can trigger it manually anytime from the
+# Actions tab ("Run workflow").
+on:
+  schedule:
+    # Friday 6pm-11:59pm Central (currently UTC-5 / CDT)
+    - cron: '*/15 23 * * 5'
+    # Saturday 12am-5:59am Central (tail of Friday night, until 1am Central)
+    - cron: '*/15 0-5 * * 6'
+    # Saturday 11am-11:59pm Central
+    - cron: '*/15 16-23 * * 6'
+    # Sunday 12am-6:59am Central (tail of Saturday, until 2am Central)
+    - cron: '*/15 0-6 * * 0'
+  workflow_dispatch: {}   # lets you click "Run workflow" in the Actions tab to test on demand
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Sync live scores from ESPN into Firestore
+        run: python3 scripts/firestore_sync.py
+
+# ---------------------------------------------------------------------------
+# DST note: Central time switches from CDT (UTC-5) to CST (UTC-6) on
+# November 1, 2026. After that, shift every hour above earlier by one
+# (e.g. '*/15 23 * * 5' -> '*/15 22 * * 5') to keep tracking the same
+# Central-time windows.
+#
+# Bowl season note: December bowl games run on all sorts of days/times,
+# not just Fri/Sat/Sun. Add cron lines for whatever days/hours (UTC) the
+# bowl schedule needs once it's announced.
+# ---------------------------------------------------------------------------
