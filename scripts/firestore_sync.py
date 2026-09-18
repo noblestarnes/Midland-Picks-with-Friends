@@ -96,7 +96,17 @@ def fs_list(collection, page_size=100):
 
 def espn_scoreboard(yyyymmdd):
     url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?dates={yyyymmdd}"
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    # A bare "Mozilla/5.0" User-Agent (what this used to send) reads as a bot
+    # to ESPN's edge protection and gets a blanket 403 — a full, real
+    # browser-style header set gets treated as an ordinary page load instead.
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                      "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://www.espn.com/college-football/scoreboard",
+    }
+    req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req, timeout=20) as r:
         return json.loads(r.read())
 
