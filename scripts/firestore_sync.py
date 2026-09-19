@@ -7,16 +7,25 @@ Score source: CollegeFootballData.com (CFBD), not ESPN. ESPN's public
 scoreboard endpoint started outright blocking requests from GitHub Actions'
 IP ranges with a blanket 403 (confirmed even after sending full browser-style
 headers), which is a known issue for CI systems calling ESPN's unofficial
-API. CFBD is a real API meant for exactly this kind of programmatic use —
-free, but requires a personal API key (see README note below).
+API. CFBD is a real API meant for exactly this kind of programmatic use.
+
+IMPORTANT: real-time, in-progress scores are a CFBD Patreon-tier feature
+(their free tier only has final/historical results — confirmed by testing:
+a Thursday night game produced zero score updates all game, only the final
+box score would have come through afterward). This script calls CFBD's
+"live scoreboard" endpoint for in-game scores, which requires at least
+Tier 1 ($1/mo, https://collegefootballdata.com/api-tiers). It also still
+calls the plain /games endpoint as a backstop, so final scores keep coming
+through even on the free tier if you ever drop the subscription.
 
 Stdlib only (urllib) so it runs anywhere with no pip installs.
 
-SETUP: get a free API key at https://collegefootballdata.com/key, then add
-it as a GitHub repo secret named CFBD_API_KEY (Settings -> Secrets and
-variables -> Actions -> New repository secret). The workflow file passes it
-in as an environment variable — never hardcode the key in this file, since
-this repo is public.
+SETUP: get an API key at https://collegefootballdata.com/key, subscribe to
+at least CFBD's Patreon Tier 1 for live scores, then add the key as a
+GitHub repo secret named CFBD_API_KEY (Settings -> Secrets and variables ->
+Actions -> New repository secret). The workflow file passes it in as an
+environment variable — never hardcode the key in this file, since this
+repo is public.
 """
 import json
 import os
@@ -116,26 +125,46 @@ def fs_list(collection, page_size=100):
 
 # ---------------- CollegeFootballData ----------------
 
-def cfbd_games(year):
-    """Fetches every FBS game (regular season + postseason/bowls) for the
-    given season in one call. seasonType=both covers bowl games automatically,
-    so no extra cron windows are needed in December like the old ESPN setup
-    would have required."""
+def _cfbd_get(path, params):
     if not CFBD_API_KEY:
         raise RuntimeError(
-            "CFBD_API_KEY is not set. Get a free key at "
-            "https://collegefootballdata.com/key and add it as a GitHub "
-            "repo secret named CFBD_API_KEY."
+            "CFBD_API_KEY is not set. Get a key at "
+            "https://collegefootballdata.com/key, subscribe to at least "
+            "Tier 1 on their Patreon for live scores, and add the key as a "
+            "GitHub repo secret named CFBD_API_KEY."
         )
-    qs = urllib.parse.urlencode({"year": year, "seasonType": "both"})
-    url = f"{CFBD_BASE}/games?{qs}"
+    qs = urllib.parse.urlencode(params)
+    url = f"{CFBD_BASE}{path}?{qs}"
     headers = {"Authorization": f"Bearer {CFBD_API_KEY}", "Accept": "application/json"}
-    data = _http(url, headers=headers)
+    return _http(url, headers=headers)
+
+def cfbd_scoreboard():
+    """Live, real-time games (in-progress, and recently finished) — this is
+    the Patreon-gated endpoint (Tier 1+). Returns [] without raising if the
+    key isn't entitled to it, so the /games backstop below still runs."""
+    try:
+        data = _cfbd_get("/scoreboard", {"classification": "fbs"})
+        return data if isinstance(data, list) else []
+    except urllib.error.HTTPError as e:
+        print(f"  (live /scoreboard fetch failed: HTTP {e.code} — "
+              f"is the CFBD key subscribed to at least Tier 1 for live data?)", file=sys.stderr)
+        return []
+    except Exception as e:
+        print(f"  (live /scoreboard fetch failed: {e})", file=sys.stderr)
+        return []
+
+def cfbd_games(year):
+    """Backstop, works on the free tier: every FBS game (regular season +
+    postseason/bowls) for the season. seasonType=both covers bowl games
+    automatically, so no extra cron windows are needed in December like the
+    old ESPN setup would have required. Only carries FINAL scores reliably —
+    see cfbd_scoreboard() above for in-progress scores."""
+    data = _cfbd_get("/games", {"year": year, "seasonType": "both"})
     return data if isinstance(data, list) else []
 
 def games_in_date_window(all_games, dates):
-    """dates: list of 'YYYYMMDD' strings. Filters CFBD's season-long game
-    list down to just the ones starting on one of those UTC calendar days."""
+    """dates: list of 'YYYYMMDD' strings. Filters a season-long game list
+    down to just the ones starting on one of those UTC calendar days."""
     wanted = set(dates)
     out = []
     for g in all_games:
@@ -162,31 +191,45 @@ def matches_alias(cfbd_team_name, dashboard_name):
             return True
     return False
 
-def find_cfbd_match(dashboard_game, cfbd_games_list):
-    home_field = "home_team" if cfbd_games_list and "home_team" in cfbd_games_list[0] else "homeTeam"
-    away_field = "away_team" if cfbd_games_list and "away_team" in cfbd_games_list[0] else "awayTeam"
-    for cg in cfbd_games_list:
-        cg_home = cg.get(home_field) or cg.get("home_team") or cg.get("homeTeam")
-        cg_away = cg.get(away_field) or cg.get("away_team") or cg.get("awayTeam")
-        if cg_home and cg_away and \
-           matches_alias(cg_home, dashboard_game["home"]) and \
-           matches_alias(cg_away, dashboard_game["away"]):
-            return cg
+# CFBD's endpoints don't all share one schema: /games is flat snake_case
+# (home_team, home_points, completed); /scoreboard nests each side under
+# homeTeam/awayTeam objects (name/points/status can vary by field name too).
+# These helpers dig through every shape seen in the wild instead of assuming
+# one, since the live endpoint's exact response can't be tested until a
+# subscribed key runs this for real.
+def _team_name(cg, side):
+    nested = cg.get(f"{side}Team") or cg.get(f"{side}_team")
+    if isinstance(nested, dict):
+        return nested.get("name") or nested.get("school") or nested.get("displayName")
+    if isinstance(nested, str):
+        return nested
     return None
 
-def cfbd_score(cg, side):
-    """side: 'home' or 'away'. Handles both snake_case and camelCase field
-    names, since CFBD has multiple API versions in the wild."""
+def _team_points(cg, side):
+    nested = cg.get(f"{side}Team") or cg.get(f"{side}_team")
+    if isinstance(nested, dict):
+        for key in ("points", "score"):
+            if key in nested:
+                return nested[key]
     for key in (f"{side}_points", f"{side}Points"):
         if key in cg:
             return cg[key]
     return None
 
 def cfbd_completed(cg):
-    for key in ("completed",):
-        if key in cg:
-            return bool(cg[key])
-    return False
+    if "completed" in cg:
+        return bool(cg["completed"])
+    status = str(cg.get("status") or "").lower()
+    return status in ("completed", "final", "finished")
+
+def find_cfbd_match(dashboard_game, cfbd_games_list):
+    for cg in cfbd_games_list:
+        cg_home, cg_away = _team_name(cg, "home"), _team_name(cg, "away")
+        if cg_home and cg_away and \
+           matches_alias(cg_home, dashboard_game["home"]) and \
+           matches_alias(cg_away, dashboard_game["away"]):
+            return cg
+    return None
 
 # ---------------- main sync ----------------
 
@@ -202,13 +245,24 @@ def main():
 
     dates = candidate_dates()
     year = datetime.now(timezone.utc).year
+
+    live_games = cfbd_scoreboard()
+    print(f"Fetched {len(live_games)} games from the live /scoreboard endpoint")
+    if live_games:
+        sample = live_games[0]
+        print(f"  (sample live game keys: {sorted(sample.keys())})")
+
     try:
         all_games = cfbd_games(year)
     except Exception as e:
-        print(f"CollegeFootballData fetch failed: {e}", file=sys.stderr)
+        print(f"CollegeFootballData /games fetch failed: {e}", file=sys.stderr)
         all_games = []
     cfbd_recent = games_in_date_window(all_games, dates)
     print(f"Fetched {len(all_games)} total CFBD games for {year}, {len(cfbd_recent)} in date window {dates}")
+
+    # Live scores take priority (checked first below); /games is the
+    # free-tier-safe backstop that still catches final scores.
+    combined = live_games + cfbd_recent
 
     any_changes = False
     for week_id, week in sorted(weeks.items(), key=lambda kv: kv[1].get("order", 0)):
@@ -217,12 +271,12 @@ def main():
         for g in games:
             if g.get("final"):
                 continue
-            match = find_cfbd_match(g, cfbd_recent)
+            match = find_cfbd_match(g, combined)
             if not match:
                 continue
             try:
-                away_score = cfbd_score(match, "away")
-                home_score = cfbd_score(match, "home")
+                away_score = _team_points(match, "away")
+                home_score = _team_points(match, "home")
                 away_score = int(away_score) if away_score not in (None, "") else None
                 home_score = int(home_score) if home_score not in (None, "") else None
             except (TypeError, ValueError):
