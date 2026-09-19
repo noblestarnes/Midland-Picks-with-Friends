@@ -251,6 +251,10 @@ def main():
     if live_games:
         sample = live_games[0]
         print(f"  (sample live game keys: {sorted(sample.keys())})")
+        print(f"  (sample homeTeam contents: {sample.get('homeTeam')})")
+        print(f"  (sample awayTeam contents: {sample.get('awayTeam')})")
+        print("  (all live game matchups: " +
+              ", ".join(f"{_team_name(cg,'away')} @ {_team_name(cg,'home')}" for cg in live_games) + ")")
 
     try:
         all_games = cfbd_games(year)
@@ -273,15 +277,21 @@ def main():
                 continue
             match = find_cfbd_match(g, combined)
             if not match:
+                print(f"  [{week_id}] no CFBD match for '{g.get('away')} @ {g.get('home')}'")
                 continue
             try:
                 away_score = _team_points(match, "away")
                 home_score = _team_points(match, "home")
                 away_score = int(away_score) if away_score not in (None, "") else None
                 home_score = int(home_score) if home_score not in (None, "") else None
-            except (TypeError, ValueError):
+            except (TypeError, ValueError) as e:
+                print(f"  [{week_id}] matched '{g.get('away')} @ {g.get('home')}' but couldn't parse "
+                      f"scores from it ({e}); raw match: {match}")
                 continue
             is_final = cfbd_completed(match)
+            print(f"  [{week_id}] matched '{g.get('away')} @ {g.get('home')}' -> "
+                  f"away={away_score} home={home_score} final={is_final} "
+                  f"(dashboard currently: away={g.get('awayScore')} home={g.get('homeScore')} final={g.get('final')})")
             if away_score is not None and g.get("awayScore") != away_score:
                 g["awayScore"] = away_score; changed = True
             if home_score is not None and g.get("homeScore") != home_score:
