@@ -333,6 +333,8 @@
   .part-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:13px 16px; border-bottom:1px solid var(--line); background:var(--surface-2); }
   .part-name{ font-family:var(--font-display); font-size:16px; letter-spacing:.02em; text-transform:uppercase; }
   .part-total{ font-family:var(--font-mono); font-weight:700; font-size:15px; }
+  .part-exposure{ display:flex; gap:18px; padding:7px 16px; border-bottom:1px solid var(--line); font-size:11.5px; color:var(--ink-faint); }
+  .part-exposure .mono{ font-weight:700; margin-left:4px; }
   .part-games{ display:flex; flex-direction:column; }
   .prow{ display:flex; align-items:center; gap:10px; padding:9px 16px; border-bottom:1px solid var(--line); font-size:13px; }
   .prow:last-child{ border-bottom:none; }
@@ -354,6 +356,7 @@
   .g-wager{ font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; padding:3px 8px; border-radius:999px; }
   .g-wager.wager-Regular{ background:var(--surface); color:var(--ink-faint); border:1px solid var(--line); }
   .g-wager.wager-Hammer, .g-wager.wager-DoubleHammer, .g-wager.wager-GOW, .g-wager.wager-GOWHammer, .g-wager.wager-GOWDoubleHammer{ background:var(--red-soft); color:var(--red); }
+  .g-hammer{ font-size:11px; font-weight:700; color:var(--red); white-space:nowrap; }
   .g-when{ margin-left:auto; font-family:var(--font-mono); font-size:12px; color:var(--ink-dim); }
   .g-sides{ display:grid; grid-template-columns:1fr 1fr; }
   .g-side{ padding:10px 14px; }
@@ -862,6 +865,69 @@
       });
     });
     return { totals: totals, gameResults: gameResults };
+  }
+
+  function gameHasNoScoreYet(g){
+    return (g.awayScore===null||g.awayScore===undefined||g.awayScore==='') ||
+           (g.homeScore===null||g.homeScore===undefined||g.homeScore==='');
+  }
+
+  // Same payout math as computeGame, but for a hypothetical winner instead
+  // of reading the actual score — used to work out the two possible
+  // outcomes (away wins / home wins) of a game that hasn't been played yet.
+  function computeGameOutcome(g, participants, picks, assumedWinner){
+    var out = { perPerson: {} };
+    var voters = [];
+    participants.forEach(function(p){
+      var pk = picks[p] && picks[p][g.id];
+      if (pk === g.away || pk === g.home) voters.push({person:p, pick:pk});
+    });
+    var Q = voters.length;
+    if (Q === 0) return out;
+    var P = WAGER_KEY[g.wager] || WAGER_KEY.Regular;
+    var R = voters.filter(function(v){ return v.pick === g.away; }).length;
+    var S = Q - R;
+    var T = Math.max(R,S), U = Math.min(R,S);
+    var V = T * P;
+    var W = T ? V / T : 0;
+    var X = U ? V / U : 0;
+    var Ywin = assumedWinner === g.away ? R : S;
+    var majority = Ywin >= Q/2;
+    voters.forEach(function(v){
+      var amt;
+      if (v.pick === assumedWinner){ amt = majority ? W : X; }
+      else { amt = -(majority ? X : W); }
+      out.perPerson[v.person] = amt;
+    });
+    return out;
+  }
+
+  // Each participant's best-case ("max win") and worst-case ("max loss")
+  // total for the week: whatever's already locked in from games with a
+  // score entered (live or final — same numbers already in comp.totals),
+  // plus the full swing (win it all / lose it all) from games that
+  // haven't kicked off yet. Updates automatically as scores come in and
+  // games move out of the "still pending" bucket.
+  function computeExposure(weekData, comp){
+    var participants = weekData.participants || [];
+    var picks = weekData.picks || {};
+    var maxWin = {}, maxLoss = {};
+    participants.forEach(function(p){
+      maxWin[p] = comp.totals[p] || 0;
+      maxLoss[p] = comp.totals[p] || 0;
+    });
+    (weekData.games||[]).forEach(function(g){
+      if (!gameHasNoScoreYet(g)) return; // already decided — reflected in comp.totals
+      var awayWins = computeGameOutcome(g, participants, picks, g.away);
+      var homeWins = computeGameOutcome(g, participants, picks, g.home);
+      participants.forEach(function(p){
+        var a = awayWins.perPerson[p] || 0;
+        var h = homeWins.perPerson[p] || 0;
+        maxWin[p] += Math.max(a, h);
+        maxLoss[p] += Math.min(a, h);
+      });
+    });
+    return { maxWin: maxWin, maxLoss: maxLoss };
   }
 
   // ---------------- db wiring (Firebase Firestore) ----------------
@@ -1524,11 +1590,17 @@
       var partGrid = el('div','part-grid');
       var rows = participants.map(function(p){ return {name:p, amt: comp.totals[p]||0}; });
       rows.sort(function(a,b){ return b.amt - a.amt; });
+      var exposure = computeExposure(week.data, comp);
       rows.forEach(function(row){
         var card = el('div','part-card');
         var head = el('div','part-head');
         head.innerHTML = '<span class="part-name">'+escapeHtml(row.name)+'</span><span class="part-total mono '+clsFor(row.amt)+'">'+fmt(row.amt)+'</span>';
         card.appendChild(head);
+        var win = exposure.maxWin[row.name]||0, loss = exposure.maxLoss[row.name]||0;
+        var expoRow = el('div','part-exposure');
+        expoRow.innerHTML = '<span>Max win <span class="mono '+clsFor(win)+'">'+fmt(win)+'</span></span>'+
+          '<span>Max loss <span class="mono '+clsFor(loss)+'">'+fmt(loss)+'</span></span>';
+        card.appendChild(expoRow);
         var list = el('div','part-games');
         games.forEach(function(g){
           var pk = (week.data.picks[row.name]||{})[g.id];
@@ -1573,6 +1645,7 @@
         var wagerCls = WAGER_BADGE_CLASS[g.wager] || 'wager-Regular';
         top.innerHTML = '<span class="g-matchup">'+escapeHtml(g.away)+' <span style="color:var(--ink-faint);font-weight:400;">at</span> '+escapeHtml(g.home)+'</span>'+
           '<span class="g-wager '+wagerCls+'">'+escapeHtml(g.wager||'Regular')+'</span>'+
+          (g.hammerBy ? '<span class="g-hammer">🔨 '+escapeHtml(g.hammerBy)+'</span>' : '')+
           '<span class="g-when">'+escapeHtml((g.dayOfWeek||'')+' '+formatKickoff(g.kickoff))+'</span>';
         card.appendChild(top);
         var sides = el('div','g-sides');
