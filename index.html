@@ -502,6 +502,19 @@
   }
   function gameHasHammerFrom(g, excludePerson){ return gameHasCallFrom(g, excludePerson, 'Hammer'); }
 
+  // Builds the "who hammered" label for a game from the actual hammerCalls
+  // people threw via the per-pick dropdown (the normal path), falling back
+  // to the manually-typed hammerBy field (older data / edit-modal entries)
+  // only when no one shows up in hammerCalls.
+  function hammerCallSummary(g){
+    var byCall = Object.keys(g.hammerCalls || {}).map(function(person){
+      var val = g.hammerCalls[person];
+      return person + (val === 'ReHammer' ? ' (re-hammer)' : '');
+    });
+    if (byCall.length) return byCall.join(', ');
+    return g.hammerBy || '';
+  }
+
   var state = {
     roster: [],
     venmo: {},             // {personName: 'venmo-username'} — for Settle Up pay links
@@ -1643,9 +1656,10 @@
         var card = el('div','g-card');
         var top = el('div','g-top');
         var wagerCls = WAGER_BADGE_CLASS[g.wager] || 'wager-Regular';
+        var hammerLabel = hammerCallSummary(g);
         top.innerHTML = '<span class="g-matchup">'+escapeHtml(g.away)+' <span style="color:var(--ink-faint);font-weight:400;">at</span> '+escapeHtml(g.home)+'</span>'+
           '<span class="g-wager '+wagerCls+'">'+escapeHtml(g.wager||'Regular')+'</span>'+
-          (g.hammerBy ? '<span class="g-hammer">🔨 '+escapeHtml(g.hammerBy)+'</span>' : '')+
+          (hammerLabel ? '<span class="g-hammer">🔨 '+escapeHtml(hammerLabel)+'</span>' : '')+
           '<span class="g-when">'+escapeHtml((g.dayOfWeek||'')+' '+formatKickoff(g.kickoff))+'</span>';
         card.appendChild(top);
         var sides = el('div','g-sides');
