@@ -356,6 +356,8 @@
   .g-wager{ font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; padding:3px 8px; border-radius:999px; }
   .g-wager.wager-Regular{ background:var(--surface); color:var(--ink-faint); border:1px solid var(--line); }
   .g-wager.wager-Hammer, .g-wager.wager-DoubleHammer, .g-wager.wager-GOW, .g-wager.wager-GOWHammer, .g-wager.wager-GOWDoubleHammer{ background:var(--red-soft); color:var(--red); }
+  .g-pot{ font-size:11px; font-weight:700; color:var(--ink-dim); font-family:var(--font-mono); white-space:nowrap; }
+  .g-risk{ text-transform:none; font-weight:400; color:var(--ink-dim); }
   .g-hammer{ font-size:11px; font-weight:700; color:var(--red); white-space:nowrap; }
   .g-when{ margin-left:auto; font-family:var(--font-mono); font-size:12px; color:var(--ink-dim); }
   .g-sides{ display:grid; grid-template-columns:1fr 1fr; }
@@ -916,21 +918,24 @@
   }
 
   // Each participant's best-case ("max win") and worst-case ("max loss")
-  // total for the week: whatever's already locked in from games with a
-  // score entered (live or final — same numbers already in comp.totals),
-  // plus the full swing (win it all / lose it all) from games that
-  // haven't kicked off yet. Updates automatically as scores come in and
-  // games move out of the "still pending" bucket.
+  // total for the week. Only games marked FINAL count as locked in — a game
+  // that's in progress (even with a score showing) is still treated as
+  // open, so the full win/lose swing stays in play until it's final.
   function computeExposure(weekData, comp){
     var participants = weekData.participants || [];
     var picks = weekData.picks || {};
     var maxWin = {}, maxLoss = {};
-    participants.forEach(function(p){
-      maxWin[p] = comp.totals[p] || 0;
-      maxLoss[p] = comp.totals[p] || 0;
-    });
+    participants.forEach(function(p){ maxWin[p] = 0; maxLoss[p] = 0; });
     (weekData.games||[]).forEach(function(g){
-      if (!gameHasNoScoreYet(g)) return; // already decided — reflected in comp.totals
+      var res = comp.gameResults[g.id] || {};
+      if (res.status === 'final'){
+        // decided: whatever was won/lost (or 0 on a push) is locked in
+        participants.forEach(function(p){
+          var amt = (res.perPerson && res.perPerson[p]) || 0;
+          maxWin[p] += amt; maxLoss[p] += amt;
+        });
+        return;
+      }
       var awayWins = computeGameOutcome(g, participants, picks, g.away);
       var homeWins = computeGameOutcome(g, participants, picks, g.home);
       participants.forEach(function(p){
@@ -941,6 +946,26 @@
       });
     });
     return { maxWin: maxWin, maxLoss: maxLoss };
+  }
+
+  // Per-person amount at risk on each side of a game, plus the total pot.
+  // Even split = same on both sides (e.g. $50/$50); lopsided = the minority
+  // side risks more per head (T*P/U) while the majority risks the base P.
+  function gameRiskBySide(g, participants, picks){
+    var P = WAGER_KEY[g.wager] || WAGER_KEY.Regular;
+    var R = 0, S = 0;
+    participants.forEach(function(p){
+      var pk = picks[p] && picks[p][g.id];
+      if (pk === g.away) R++; else if (pk === g.home) S++;
+    });
+    var out = { awayN:R, homeN:S, awayEach:null, homeEach:null, pot:0 };
+    if (!R || !S) return out; // nobody on the other side — no real action
+    var T = Math.max(R,S), U = Math.min(R,S);
+    var minorityEach = T * P / U;
+    out.awayEach = R >= S ? P : minorityEach;
+    out.homeEach = S >= R ? P : minorityEach;
+    out.pot = T * P;
+    return out;
   }
 
   // ---------------- db wiring (Firebase Firestore) ----------------
@@ -1657,15 +1682,19 @@
         var top = el('div','g-top');
         var wagerCls = WAGER_BADGE_CLASS[g.wager] || 'wager-Regular';
         var hammerLabel = hammerCallSummary(g);
+        var risk = gameRiskBySide(g, participants, week.data.picks || {});
         top.innerHTML = '<span class="g-matchup">'+escapeHtml(g.away)+' <span style="color:var(--ink-faint);font-weight:400;">at</span> '+escapeHtml(g.home)+'</span>'+
           '<span class="g-wager '+wagerCls+'">'+escapeHtml(g.wager||'Regular')+'</span>'+
           (hammerLabel ? '<span class="g-hammer">🔨 '+escapeHtml(hammerLabel)+'</span>' : '')+
+          (risk.pot ? '<span class="g-pot">pot $'+(Math.round(risk.pot*100)/100).toFixed(2).replace(/\.00$/,'')+'</span>' : '')+
           '<span class="g-when">'+escapeHtml((g.dayOfWeek||'')+' '+formatKickoff(g.kickoff))+'</span>';
         card.appendChild(top);
         var sides = el('div','g-sides');
         [g.away, g.home].forEach(function(team){
           var side = el('div','g-side');
-          side.appendChild(el('div','g-side-label', escapeHtml(team) + ' <span class="line">'+escapeHtml(teamLine(g,team))+'</span>'));
+          var each = (team === g.away) ? risk.awayEach : risk.homeEach;
+          side.appendChild(el('div','g-side-label', escapeHtml(team) + ' <span class="line">'+escapeHtml(teamLine(g,team))+'</span>' +
+            (each !== null ? ' <span class="g-risk">· $'+(Math.round(each*100)/100).toFixed(2).replace(/\.00$/,'')+' each at risk</span>' : '')));
           var names = el('div','g-names');
           var any = false;
           participants.forEach(function(p){
